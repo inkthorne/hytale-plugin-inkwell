@@ -4,8 +4,12 @@
     "Staff_Cast_Summon_Launch": {
       "Interactions": [
         {
-          "Parent": "Staff_Cast_Launch",
-          "ProjectileId": "Inkwell_Ice_Ball"
+          "Type": "Projectile",
+          "RunTime": 0.25,
+          "Config": "Inkwell_Projectile_Config_Ice_Ball",
+          "Effects": {
+            "ItemAnimationId": "CastSummonCharged"
+          }
         }
       ]
     }

@@ -1,5 +1,6 @@
 package inkthorne.inkwell;
 
+import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 
@@ -30,7 +31,12 @@ public class InkwellPlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
-        // TODO: register reusable components/systems/content as they are built.
+        // Register Inkwell's custom interaction types so JSON assets can reference them by Type.
+        // Must happen before assets load so referencing documents decode against the right codec.
+        getCodecRegistry(Interaction.CODEC).register(
+            "Inkwell_AoeEffect",
+            InkwellAoeEffectInteraction.class,
+            InkwellAoeEffectInteraction.CODEC);
 
         getLogger().atInfo().log("Inkwell library loaded!");
     }

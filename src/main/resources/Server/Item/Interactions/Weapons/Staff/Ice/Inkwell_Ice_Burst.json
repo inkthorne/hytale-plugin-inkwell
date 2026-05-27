@@ -1,0 +1,6 @@
+{
+  "Type": "Inkwell_AoeEffect",
+  "Range": 3.0,
+  "EffectId": "Slow",
+  "Vfx": "IceBall_Explosion"
+}
