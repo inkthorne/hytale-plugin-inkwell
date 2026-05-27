@@ -1,0 +1,48 @@
+{
+  "$Comment": "Inkwell_Chicken_Annoying — a chicken that endlessly circles the nearest player. A self-contained 'Generic' role (NOT a Variant): a Variant's Modify block runs values through the expression system and rejects a structural Instructions array, so the behavior must be defined at the role's top level. Reuses the vanilla Chicken appearance (referenced vanilla id, no Inkwell_ prefix). Inkwell_Orbit is a custom BodyMotion registered by InkwellPlugin.setup().",
+  "Type": "Generic",
+  "Appearance": "Chicken",
+  "MotionControllerList": [
+    {
+      "Type": "Walk",
+      "MaxWalkSpeed": 7,
+      "Gravity": 10,
+      "MaxFallSpeed": 20,
+      "Acceleration": 10
+    }
+  ],
+  "MaxHealth": { "Compute": "MaxHealth" },
+  "Parameters": {
+    "MaxHealth": {
+      "Value": 12,
+      "Description": "Max health for the annoying chicken"
+    }
+  },
+  "Instructions": [
+    {
+      "Sensor": {
+        "Type": "Player",
+        "Range": 30,
+        "LockOnTarget": true
+      },
+      "BodyMotion": {
+        "Type": "Inkwell_Orbit",
+        "Radius": 2.5,
+        "RelativeSpeed": 0.95,
+        "RadiusGain": 0.6,
+        "Clockwise": true
+      }
+    },
+    {
+      "Sensor": {
+        "Type": "Any"
+      },
+      "BodyMotion": {
+        "Type": "WanderInCircle",
+        "Radius": 6,
+        "RelativeSpeed": 0.25
+      }
+    }
+  ],
+  "NameTranslationKey": "server.npcRoles.Inkwell_Chicken_Annoying.name"
+}

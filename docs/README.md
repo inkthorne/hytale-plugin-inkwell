@@ -19,13 +19,15 @@ architecture aimed at contributors, see [`../CLAUDE.md`](../CLAUDE.md).)
 
 ## Reusable primitives (Java)
 
-Combat building blocks other content can reference by `Type` in JSON.
+Building blocks other content can reference by `Type` in JSON.
 
 - [`Inkwell_AoeEffect` — area-of-effect status applier](aoe-effect-interaction.md)
+- [`Inkwell_Orbit` — orbit-the-target NPC body motion](orbit-body-motion.md)
 
 ## Content
 
 - [Frost Staff](frost-staff.md) — ice staff whose projectile slows everything in a small blast radius
+- [Annoying Chicken](assets/inkwell-chicken-annoying.md) — a chicken NPC that endlessly circles the nearest player
 
 ## Asset reference
 
@@ -34,3 +36,4 @@ Per-asset field references (the [`Inkwell_AoeEffect`](aoe-effect-interaction.md)
 
 - [`Inkwell_Weapon_Staff_Frost`](assets/inkwell-weapon-staff-frost.md) — the frost staff item
 - [`Inkwell_Projectile_Config_Ice_Ball`](assets/inkwell-projectile-config-ice-ball.md) — its ice ball projectile
+- [`Inkwell_Chicken_Annoying`](assets/inkwell-chicken-annoying.md) — the orbiting chicken NPC role

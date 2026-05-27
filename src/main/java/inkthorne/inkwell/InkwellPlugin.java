@@ -3,6 +3,8 @@ package inkthorne.inkwell;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.hypixel.hytale.server.npc.NPCPlugin;
+import inkthorne.inkwell.npc.BuilderBodyMotionOrbit;
 
 /**
  * Entry point for Inkwell — a public <b>library plugin</b> for Hytale: the shared
@@ -37,6 +39,11 @@ public class InkwellPlugin extends JavaPlugin {
             "Inkwell_AoeEffect",
             InkwellAoeEffectInteraction.class,
             InkwellAoeEffectInteraction.CODEC);
+
+        // Register Inkwell's custom NPC body-motion types so role JSON can reference them by Type.
+        // The NPC plugin owns the core-component registry; we depend on it (manifest Dependencies)
+        // so it loads first, and register before our own NPC role assets are parsed.
+        NPCPlugin.get().registerCoreComponentType("Inkwell_Orbit", BuilderBodyMotionOrbit::new);
 
         getLogger().atInfo().log("Inkwell library loaded!");
     }
