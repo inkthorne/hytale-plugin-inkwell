@@ -24,7 +24,8 @@ tilt) and renders identically on direct hits and terrain misses.
   "EffectId": "Slow",
   "Vfx": "IceBall_Explosion",
   "VfxScale": 1.0,
-  "VfxDuration": 2.0
+  "VfxDuration": 2.0,
+  "CandidateMargin": 16.0
 }
 ```
 
@@ -35,6 +36,7 @@ tilt) and renders identically on direct hits and terrain misses.
 | `Vfx` | string | `""` | Optional particle system spawned world-oriented at the impact (`""` = none). |
 | `VfxScale` | double | `1.0` | Scale of the impact particle. |
 | `VfxDuration` | double | `2.0` | Duration (seconds) of the impact particle. |
+| `CandidateMargin` | double | `16.0` | Extra reach (blocks) beyond `Range` for the broad-phase query. The engine spatial query matches entities by **origin**; this margin over-gathers so a large creature whose origin is outside `Range` (but whose body overlaps the blast) is still considered by the bounding-box test. Must be ≥ the largest such creature's origin-to-body-edge distance; bigger scans a wider area. |
 
 ## Behavior notes
 

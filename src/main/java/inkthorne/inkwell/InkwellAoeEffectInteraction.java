@@ -58,6 +58,9 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
             .append(new KeyedCodec<>("VfxDuration", Codec.DOUBLE),
                     InkwellAoeEffectInteraction::setVfxDuration, InkwellAoeEffectInteraction::getVfxDuration)
             .add()
+            .append(new KeyedCodec<>("CandidateMargin", Codec.DOUBLE),
+                    InkwellAoeEffectInteraction::setCandidateMargin, InkwellAoeEffectInteraction::getCandidateMargin)
+            .add()
             .build();
 
     private double range = 5.0;
@@ -66,8 +69,20 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
     private String vfx = "";
     private double vfxScale = 1.0;
     private double vfxDuration = 2.0;
+    /** Extra query reach (blocks) beyond {@code range} for the broad-phase origin query, so creatures
+     *  whose origin sits outside {@code range} but whose body overlaps the blast are still candidates
+     *  for the bounding-box test. Must be >= the largest creature's origin-to-body-edge distance. */
+    private double candidateMargin = 16.0;
 
     public InkwellAoeEffectInteraction() {
+    }
+
+    public double getCandidateMargin() {
+        return candidateMargin;
+    }
+
+    public void setCandidateMargin(double candidateMargin) {
+        this.candidateMargin = candidateMargin;
     }
 
     public String getVfx() {
@@ -147,7 +162,7 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
         // selectNearbyEntities matches on entity ORIGIN, so a large creature whose origin sits
         // outside `range` is missed even when its body overlaps the blast. Gather a generous
         // candidate set by origin, then keep only those whose BOUNDING BOX is within `range`.
-        final double candidateRadius = range + BOUNDS_CANDIDATE_MARGIN;
+        final double candidateRadius = range + candidateMargin;
         final double rangeSq = range * range;
 
         Selector.selectNearbyEntities(buffer, center, candidateRadius, ref -> {
@@ -161,10 +176,6 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
             }
         }, filter);
     }
-
-    /** Extra query reach (blocks) beyond {@code range} so big creatures whose origin is outside the
-     *  blast are still considered; the bounding-box test below does the real distance check. */
-    private static final double BOUNDS_CANDIDATE_MARGIN = 16.0;
 
     /**
      * True if the entity's world-space bounding box comes within {@code sqrt(rangeSq)} of {@code center}

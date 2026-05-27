@@ -4,5 +4,6 @@
   "EffectId": "Slow",
   "Vfx": "IceBall_Explosion",
   "VfxScale": 1.0,
-  "VfxDuration": 2.0
+  "VfxDuration": 2.0,
+  "CandidateMargin": 16.0
 }
