@@ -1,0 +1,13 @@
+{
+  "Parent": "Weapon_Staff_Frost",
+  "InteractionVars": {
+    "Staff_Cast_Summon_Launch": {
+      "Interactions": [
+        {
+          "Parent": "Staff_Cast_Launch",
+          "ProjectileId": "Inkwell_Ice_Ball"
+        }
+      ]
+    }
+  }
+}
