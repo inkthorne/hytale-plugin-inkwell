@@ -1,0 +1,13 @@
+{
+  "Group": "inkthorne",
+  "Name": "Inkwell",
+  "Version": "0.1.0",
+  "Authors": [
+    {
+      "Name": "inkthorne"
+    }
+  ],
+  "Main": "inkthorne.inkwell.InkwellPlugin",
+  "ServerVersion": "^0.5.0",
+  "IncludesAssetPack": true
+}
