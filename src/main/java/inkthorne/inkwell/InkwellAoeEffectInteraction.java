@@ -9,10 +9,12 @@ import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.math.shape.Box;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
+import com.hypixel.hytale.server.core.modules.entity.component.BoundingBox;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInstantInteraction;
@@ -142,12 +144,53 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
         Predicate<Ref<EntityStore>> filter = ref -> ref != null && ref.isValid()
             && !ref.equals(self) && (owner == null || !ref.equals(owner));
 
-        Selector.selectNearbyEntities(buffer, center, range, ref -> {
+        // selectNearbyEntities matches on entity ORIGIN, so a large creature whose origin sits
+        // outside `range` is missed even when its body overlaps the blast. Gather a generous
+        // candidate set by origin, then keep only those whose BOUNDING BOX is within `range`.
+        final double candidateRadius = range + BOUNDS_CANDIDATE_MARGIN;
+        final double rangeSq = range * range;
+
+        Selector.selectNearbyEntities(buffer, center, candidateRadius, ref -> {
+            if (!boundingBoxWithin(buffer, ref, center, rangeSq)) {
+                return;
+            }
             EffectControllerComponent ctrl =
                 buffer.getComponent(ref, EffectControllerComponent.getComponentType());
             if (ctrl != null) {
                 ctrl.addEffect(ref, effect, buffer);
             }
         }, filter);
+    }
+
+    /** Extra query reach (blocks) beyond {@code range} so big creatures whose origin is outside the
+     *  blast are still considered; the bounding-box test below does the real distance check. */
+    private static final double BOUNDS_CANDIDATE_MARGIN = 16.0;
+
+    /**
+     * True if the entity's world-space bounding box comes within {@code sqrt(rangeSq)} of {@code center}
+     * (squared closest-point distance from the impact to the AABB). Falls back to the entity origin if it
+     * has no bounding box.
+     */
+    private static boolean boundingBoxWithin(CommandBuffer<EntityStore> buffer, Ref<EntityStore> ref,
+                                             Vector3d center, double rangeSq) {
+        TransformComponent transform = buffer.getComponent(ref, TransformComponent.getComponentType());
+        if (transform == null) {
+            return false;
+        }
+        Vector3d pos = transform.getPosition();
+        BoundingBox boundingBox = buffer.getComponent(ref, BoundingBox.getComponentType());
+        Box box = boundingBox == null ? null : boundingBox.getBoundingBox();
+        if (box == null) {
+            return pos.distanceSquared(center) <= rangeSq;
+        }
+        // BoundingBox is model-relative; offset by the entity position to get the world AABB.
+        double dx = center.x - clamp(center.x, pos.x + box.min.x, pos.x + box.max.x);
+        double dy = center.y - clamp(center.y, pos.y + box.min.y, pos.y + box.max.y);
+        double dz = center.z - clamp(center.z, pos.z + box.min.z, pos.z + box.max.z);
+        return (dx * dx + dy * dy + dz * dz) <= rangeSq;
+    }
+
+    private static double clamp(double v, double lo, double hi) {
+        return v < lo ? lo : (v > hi ? hi : v);
     }
 }
