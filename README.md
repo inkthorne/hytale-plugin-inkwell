@@ -67,3 +67,7 @@ or other plugins' content (Hytale resolves asset ids globally per type).
 ## Contributing
 
 See [CLAUDE.md](CLAUDE.md) for build/architecture notes and the conventions used in this repo.
+
+## License
+
+[MIT](LICENSE) © 2026 inkthorne
