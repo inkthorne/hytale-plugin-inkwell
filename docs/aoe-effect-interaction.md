@@ -20,7 +20,7 @@ tilt) and renders identically on direct hits and terrain misses.
 ```json
 {
   "Type": "Inkwell_AoeEffect",
-  "Range": 3.0,
+  "Range": 2.0,
   "EffectId": "Slow",
   "Vfx": "IceBall_Explosion",
   "VfxScale": 1.0,
@@ -48,4 +48,4 @@ tilt) and renders identically on direct hits and terrain misses.
 
 ## Used by
 
-- [Frost Staff](frost-staff.md) → `Inkwell_Ice_Burst` (`Range 3`, `EffectId "Slow"`, `Vfx "IceBall_Explosion"`)
+- [Frost Staff](frost-staff.md) → `Inkwell_Ice_Burst` (`Range 2`, `EffectId "Slow"`, `Vfx "IceBall_Explosion"`)

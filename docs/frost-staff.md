@@ -12,8 +12,10 @@ projectile that triggers Inkwell's [`Inkwell_AoeEffect`](aoe-effect-interaction.
   has reduced gravity (`2.0` vs vanilla `4.4`) for a flatter, longer-range arc.
 - **On impact** (a creature *or* terrain):
   - **25 Ice damage** to a directly-struck entity (charged), plus knockback.
-  - **Slow** applied to the struck entity *and* every creature whose bounding box is within **3 blocks**
-    of the impact — works on players and NPCs, auto-expires (~10s, the `Slow` effect's own duration).
+  - **Slow** applied to every creature whose bounding box is within **2 blocks** of the impact — this
+    naturally includes a directly-struck creature (its box contains the impact), so no separate
+    direct-hit handling is needed. Works on players and NPCs, auto-expires (~10s, the `Slow` effect's
+    own duration).
   - A **world-oriented ice explosion** (`IceBall_Explosion`) plays at the impact, identical on direct
     hits and terrain.
 
@@ -22,11 +24,11 @@ projectile that triggers Inkwell's [`Inkwell_AoeEffect`](aoe-effect-interaction.
 ```
 Inkwell_Weapon_Staff_Frost            (item; Parent: vanilla Weapon_Staff_Frost)
   └─ cast launches ──► Inkwell_Projectile_Config_Ice_Ball   (Parent: Projectile_Config_Ice_Ball)
-        ProjectileHit:  25 Ice dmg + knockback + ApplyEffect(Slow) on target ─► Inkwell_Ice_Burst ─► despawn
+        ProjectileHit:  25 Ice dmg + knockback ─► Inkwell_Ice_Burst ─► despawn
         ProjectileMiss: impact sound ─► Inkwell_Ice_Burst ─► despawn
                                                │
                                                └─► Inkwell_Ice_Burst   (Type: Inkwell_AoeEffect)
-                                                     Range 3 · EffectId "Slow" · Vfx "IceBall_Explosion"
+                                                     Range 2 · EffectId "Slow" · Vfx "IceBall_Explosion"
 ```
 
 ### Files

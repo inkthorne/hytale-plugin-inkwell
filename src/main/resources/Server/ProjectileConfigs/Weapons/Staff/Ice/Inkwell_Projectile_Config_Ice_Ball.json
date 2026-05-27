@@ -43,11 +43,6 @@
               "VelocityType": "Set"
             },
             "WorldSoundEventId": "SFX_Ice_Ball_Death"
-          },
-          "Next": {
-            "Type": "ApplyEffect",
-            "Entity": "Target",
-            "EffectId": "Slow"
           }
         },
         "Inkwell_Ice_Burst",
