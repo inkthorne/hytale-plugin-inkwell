@@ -3,13 +3,11 @@ call "%~dp0hytale-paths.bat"
 set "MODS_DIR=%HYTALE_MODS_DIR%"
 set "JAR_FILE=build\libs\inkwell.jar"
 
-if not exist "%JAR_FILE%" (
-    echo JAR not found. Building first...
-    call gradlew.bat build
-    if %ERRORLEVEL% NEQ 0 (
-        echo Build failed!
-        exit /b 1
-    )
+echo Building...
+call gradlew.bat build
+if %ERRORLEVEL% NEQ 0 (
+    echo Build failed!
+    exit /b 1
 )
 
 if not exist "%MODS_DIR%" (

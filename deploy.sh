@@ -7,10 +7,8 @@ source ./hytale-paths.sh
 MODS_DIR="$HYTALE_MODS_DIR"
 JAR_FILE="build/libs/inkwell.jar"
 
-if [ ! -f "$JAR_FILE" ]; then
-    echo "JAR not found. Building first..."
-    ./gradlew build
-fi
+echo "Building..."
+./gradlew build
 
 if [ ! -d "$MODS_DIR" ]; then
     echo "Creating mods directory..."
