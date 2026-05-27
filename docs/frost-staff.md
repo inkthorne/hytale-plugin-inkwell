@@ -33,11 +33,11 @@ Inkwell_Weapon_Staff_Frost            (item; Parent: vanilla Weapon_Staff_Frost)
 
 ### Files
 
-| File | Role |
-|------|------|
-| `Server/Item/Items/Weapon/Staff/Inkwell_Weapon_Staff_Frost.json` | The item. Inherits vanilla; overrides only the cast launch to use the projectile below. |
-| `Server/ProjectileConfigs/Weapons/Staff/Ice/Inkwell_Projectile_Config_Ice_Ball.json` | Config projectile (so it can run interactions). Gravity 2.0; hit/miss handlers do damage, run the burst, then despawn. |
-| `Server/Item/Interactions/Weapons/Staff/Ice/Inkwell_Ice_Burst.json` | The AOE burst (an `Inkwell_AoeEffect` asset) — slow in radius + impact VFX. |
+| File | Role | Reference |
+|------|------|-----------|
+| `Server/Item/Items/Weapon/Staff/Inkwell_Weapon_Staff_Frost.json` | The item. Inherits vanilla; overrides only the cast launch to use the projectile below. | [ref](assets/inkwell-weapon-staff-frost.md) |
+| `Server/ProjectileConfigs/Weapons/Staff/Ice/Inkwell_Projectile_Config_Ice_Ball.json` | Config projectile (so it can run interactions). Gravity 2.0; hit/miss handlers do damage, run the burst, then despawn. | [ref](assets/inkwell-projectile-config-ice-ball.md) |
+| `Server/Item/Interactions/Weapons/Staff/Ice/Inkwell_Ice_Burst.json` | The AOE burst (an `Inkwell_AoeEffect` asset) — slow in radius + impact VFX. | [ref](aoe-effect-interaction.md) |
 
 ## Tuning
 

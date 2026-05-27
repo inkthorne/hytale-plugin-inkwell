@@ -26,3 +26,11 @@ Combat building blocks other content can reference by `Type` in JSON.
 ## Content
 
 - [Frost Staff](frost-staff.md) — ice staff whose projectile slows everything in a small blast radius
+
+## Asset reference
+
+Per-asset field references (the [`Inkwell_AoeEffect`](aoe-effect-interaction.md) page covers the
+`Inkwell_Ice_Burst` asset):
+
+- [`Inkwell_Weapon_Staff_Frost`](assets/inkwell-weapon-staff-frost.md) — the frost staff item
+- [`Inkwell_Projectile_Config_Ice_Ball`](assets/inkwell-projectile-config-ice-ball.md) — its ice ball projectile
