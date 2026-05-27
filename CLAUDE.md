@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Inkwell is a public **library plugin** for Hytale — a real, loadable mod that ships reusable content (weapons, projectiles, combat primitives, …) and the API to use it. Other plugins (e.g. Telefrag, Fluff) declare a runtime dependency on it via their `manifest.json` `Dependencies`, and the server loads Inkwell first. It is currently a skeleton: the plugin loads and logs, but no library content is wired up yet.
+Inkwell is a public **library plugin** for Hytale — a real, loadable mod that ships reusable content (weapons, projectiles, combat primitives, …) and the API to use it. Other plugins (e.g. Telefrag, Fluff) declare a runtime dependency on it via their `manifest.json` `Dependencies`, and the server loads Inkwell first.
+
+Feature/usage documentation lives in [`docs/`](docs/README.md) (the Frost Staff, the `Inkwell_AoeEffect` interaction primitive, etc.) — keep it updated as content is added.
 
 ## Commands
 
