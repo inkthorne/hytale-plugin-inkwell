@@ -50,12 +50,20 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
             .append(new KeyedCodec<>("Vfx", Codec.STRING),
                     InkwellAoeEffectInteraction::setVfx, InkwellAoeEffectInteraction::getVfx)
             .add()
+            .append(new KeyedCodec<>("VfxScale", Codec.DOUBLE),
+                    InkwellAoeEffectInteraction::setVfxScale, InkwellAoeEffectInteraction::getVfxScale)
+            .add()
+            .append(new KeyedCodec<>("VfxDuration", Codec.DOUBLE),
+                    InkwellAoeEffectInteraction::setVfxDuration, InkwellAoeEffectInteraction::getVfxDuration)
+            .add()
             .build();
 
     private double range = 5.0;
     private String effectId = "Slow";
     /** Optional particle system to spawn world-oriented at the impact point ("" = none). */
     private String vfx = "";
+    private double vfxScale = 1.0;
+    private double vfxDuration = 2.0;
 
     public InkwellAoeEffectInteraction() {
     }
@@ -66,6 +74,22 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
 
     public void setVfx(String vfx) {
         this.vfx = vfx;
+    }
+
+    public double getVfxScale() {
+        return vfxScale;
+    }
+
+    public void setVfxScale(double vfxScale) {
+        this.vfxScale = vfxScale;
+    }
+
+    public double getVfxDuration() {
+        return vfxDuration;
+    }
+
+    public void setVfxDuration(double vfxDuration) {
+        this.vfxDuration = vfxDuration;
     }
 
     public double getRange() {
@@ -105,7 +129,8 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
         // both direct hits and terrain misses (JSON ModelParticles inherit the projectile's tilt,
         // and DamageEffects particles only fire on entity hits).
         if (vfx != null && !vfx.isEmpty()) {
-            ParticleUtil.spawnParticleEffect(vfx, center, 0.0f, 0.0f, 0.0f, 1.0f, 2.0f, buffer);
+            ParticleUtil.spawnParticleEffect(
+                vfx, center, 0.0f, 0.0f, 0.0f, (float) vfxScale, (float) vfxDuration, buffer);
         }
 
         var effectMap = EntityEffect.getAssetMap();
