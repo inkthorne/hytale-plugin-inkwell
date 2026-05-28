@@ -1,5 +1,5 @@
 {
-  "$Comment": "Inkwell_Chicken_Annoying — a chicken that endlessly circles the nearest player. A self-contained 'Generic' role (NOT a Variant): a Variant's Modify block runs values through the expression system and rejects a structural Instructions array, so the behavior must be defined at the role's top level. Reuses the vanilla Chicken appearance (referenced vanilla id, no Inkwell_ prefix). Inkwell_Orbit is a custom BodyMotion registered by InkwellPlugin.setup().",
+  "$Comment": "Inkwell_Chicken_Annoying — a chicken with mood swings: it randomly alternates between circling the nearest player (annoying) and ordinary wandering (default), holding each mode for a random number of seconds before re-rolling. This is driven by a single built-in 'Type: Random' instruction with 'ExecuteFor': [min, max] (see vanilla Test_Random_Instruction.json); no custom code is needed beyond the Inkwell_Orbit BodyMotion. A self-contained 'Generic' role (NOT a Variant): a Variant's Modify block runs values through the expression system and rejects a structural Instructions array, so the behavior must be defined at the role's top level. Reuses the vanilla Chicken appearance (referenced vanilla id, no Inkwell_ prefix). Inkwell_Orbit is a custom BodyMotion registered by InkwellPlugin.setup().",
   "Type": "Generic",
   "Appearance": "Chicken",
   "MotionControllerList": [
@@ -20,28 +20,55 @@
   },
   "Instructions": [
     {
-      "Sensor": {
-        "Type": "Player",
-        "Range": 30,
-        "LockOnTarget": true
-      },
-      "BodyMotion": {
-        "Type": "Inkwell_Orbit",
-        "Radius": 2.5,
-        "RelativeSpeed": 0.95,
-        "RadiusGain": 0.6,
-        "Clockwise": true
-      }
-    },
-    {
-      "Sensor": {
-        "Type": "Any"
-      },
-      "BodyMotion": {
-        "Type": "WanderInCircle",
-        "Radius": 6,
-        "RelativeSpeed": 0.25
-      }
+      "Type": "Random",
+      "Continue": true,
+      "ExecuteFor": [ 5, 12 ],
+      "Instructions": [
+        {
+          "$Comment": "Annoying branch. Top-level Sensor is Any so the Random node's per-tick matches() always passes (otherwise a Player-sensor branch picked with no player in range would idle for the whole window). The orbit-vs-wander choice is a nested fallthrough: orbit a sensed player, else wander.",
+          "Weight": 1,
+          "Sensor": {
+            "Type": "Any"
+          },
+          "Instructions": [
+            {
+              "Sensor": {
+                "Type": "Player",
+                "Range": 30,
+                "LockOnTarget": true
+              },
+              "BodyMotion": {
+                "Type": "Inkwell_Orbit",
+                "Radius": 2.5,
+                "RelativeSpeed": 0.95,
+                "RadiusGain": 0.6,
+                "Clockwise": true
+              }
+            },
+            {
+              "Sensor": {
+                "Type": "Any"
+              },
+              "BodyMotion": {
+                "Type": "WanderInCircle",
+                "Radius": 6,
+                "RelativeSpeed": 0.25
+              }
+            }
+          ]
+        },
+        {
+          "Weight": 1,
+          "Sensor": {
+            "Type": "Any"
+          },
+          "BodyMotion": {
+            "Type": "WanderInCircle",
+            "Radius": 6,
+            "RelativeSpeed": 0.25
+          }
+        }
+      ]
     }
   ],
   "NameTranslationKey": "server.npcRoles.Inkwell_Chicken_Annoying.name"
