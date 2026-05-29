@@ -36,7 +36,7 @@ projectiles have no native `TimeToLive`; they despawn via this `RemoveEntity`.
 | Step | What it does |
 |------|--------------|
 | `DamageEntityParent` | **25 Ice** damage (`Class: "Charged"`) + knockback (`Force 20`, upward/back) + impact sound `SFX_Ice_Ball_Death`. |
-| `"Inkwell_Ice_Burst"` | Runs the [AOE slow](../aoe-effect-interaction.md) centered on the impact. |
+| `"Inkwell_Interaction_Ice_Burst"` | Runs the [AOE slow](../aoe-effect-interaction.md) centered on the impact. |
 | `Simple` `RunTime 0.2` | Delay so effects play. |
 | `RemoveEntity` `User` | Despawns the projectile. |
 
@@ -45,7 +45,7 @@ projectiles have no native `TimeToLive`; they despawn via this `RemoveEntity`.
 | Step | What it does |
 |------|--------------|
 | `Simple` `RunTime 0.2` | Plays `SFX_Ice_Ball_Death` and acts as the despawn delay. |
-| `"Inkwell_Ice_Burst"` | Runs the AOE slow at the impact point. |
+| `"Inkwell_Interaction_Ice_Burst"` | Runs the AOE slow at the impact point. |
 | `RemoveEntity` `User` | Despawns the projectile. |
 
 > Note: damage lives only in `ProjectileHit` (terrain takes none), but the AOE slow runs on **both**
@@ -55,9 +55,9 @@ projectiles have no native `TimeToLive`; they despawn via this `RemoveEntity`.
 
 - **Arc/feel:** `Physics.Gravity` (and the inherited launch force on the parent).
 - **Damage / knockback:** the `DamageEntityParent` block in `ProjectileHit`.
-- **AOE behavior / VFX:** edit `Inkwell_Ice_Burst` (see the [interaction reference](../aoe-effect-interaction.md)).
+- **AOE behavior / VFX:** edit `Inkwell_Interaction_Ice_Burst` (see the [interaction reference](../aoe-effect-interaction.md)).
 
 ## Related
 
-- [Inkwell_Ice_Burst / Inkwell_AoeEffect](../aoe-effect-interaction.md) — the AOE it triggers
+- [Inkwell_Interaction_Ice_Burst / Inkwell_AoeEffect](../aoe-effect-interaction.md) — the AOE it triggers
 - [Inkwell_Weapon_Staff_Frost](inkwell-weapon-staff-frost.md) — what launches it

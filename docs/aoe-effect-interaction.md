@@ -50,4 +50,4 @@ tilt) and renders identically on direct hits and terrain misses.
 
 ## Used by
 
-- [Frost Staff](frost-staff.md) → `Inkwell_Ice_Burst` (`Range 2`, `EffectId "Slow"`, `Vfx "IceBall_Explosion"`)
+- [Frost Staff](frost-staff.md) → `Inkwell_Interaction_Ice_Burst` (`Range 2`, `EffectId "Slow"`, `Vfx "IceBall_Explosion"`)

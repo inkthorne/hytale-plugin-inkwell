@@ -45,7 +45,7 @@
             "WorldSoundEventId": "SFX_Ice_Ball_Death"
           }
         },
-        "Inkwell_Ice_Burst",
+        "Inkwell_Interaction_Ice_Burst",
         {
           "Type": "Simple",
           "RunTime": 0.2
@@ -68,7 +68,7 @@
             "WorldSoundEventId": "SFX_Ice_Ball_Death"
           }
         },
-        "Inkwell_Ice_Burst",
+        "Inkwell_Interaction_Ice_Burst",
         {
           "Type": "RemoveEntity",
           "Entity": "User"

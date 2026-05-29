@@ -24,10 +24,10 @@ projectile that triggers Inkwell's [`Inkwell_AoeEffect`](aoe-effect-interaction.
 ```
 Inkwell_Weapon_Staff_Frost            (item; Parent: vanilla Weapon_Staff_Frost)
   └─ cast launches ──► Inkwell_Projectile_Config_Ice_Ball   (Parent: Projectile_Config_Ice_Ball)
-        ProjectileHit:  25 Ice dmg + knockback ─► Inkwell_Ice_Burst ─► despawn
-        ProjectileMiss: impact sound ─► Inkwell_Ice_Burst ─► despawn
+        ProjectileHit:  25 Ice dmg + knockback ─► Inkwell_Interaction_Ice_Burst ─► despawn
+        ProjectileMiss: impact sound ─► Inkwell_Interaction_Ice_Burst ─► despawn
                                                │
-                                               └─► Inkwell_Ice_Burst   (Type: Inkwell_AoeEffect)
+                                               └─► Inkwell_Interaction_Ice_Burst   (Type: Inkwell_AoeEffect)
                                                      Range 2 · EffectId "Slow" · Vfx "IceBall_Explosion"
 ```
 
@@ -37,12 +37,12 @@ Inkwell_Weapon_Staff_Frost            (item; Parent: vanilla Weapon_Staff_Frost)
 |------|------|-----------|
 | `Server/Item/Items/Weapon/Staff/Inkwell_Weapon_Staff_Frost.json` | The item. Inherits vanilla; overrides only the cast launch to use the projectile below. | [ref](assets/inkwell-weapon-staff-frost.md) |
 | `Server/ProjectileConfigs/Weapons/Staff/Ice/Inkwell_Projectile_Config_Ice_Ball.json` | Config projectile (so it can run interactions). Gravity 2.0; hit/miss handlers do damage, run the burst, then despawn. | [ref](assets/inkwell-projectile-config-ice-ball.md) |
-| `Server/Item/Interactions/Weapons/Staff/Ice/Inkwell_Ice_Burst.json` | The AOE burst (an `Inkwell_AoeEffect` asset) — slow in radius + impact VFX. | [ref](aoe-effect-interaction.md) |
+| `Server/Item/Interactions/Weapons/Staff/Ice/Inkwell_Interaction_Ice_Burst.json` | The AOE burst (an `Inkwell_AoeEffect` asset) — slow in radius + impact VFX. | [ref](aoe-effect-interaction.md) |
 
 ## Tuning
 
-- **Blast radius / slow target effect:** edit `Inkwell_Ice_Burst.json` (`Range`, `EffectId`).
-- **Explosion size / length:** `VfxScale` / `VfxDuration` in `Inkwell_Ice_Burst.json`.
+- **Blast radius / slow target effect:** edit `Inkwell_Interaction_Ice_Burst.json` (`Range`, `EffectId`).
+- **Explosion size / length:** `VfxScale` / `VfxDuration` in `Inkwell_Interaction_Ice_Burst.json`.
 - **Damage / gravity / knockback:** the `ProjectileHit` block and `Physics` in the projectile config.
 - **Slow duration:** comes from the `Slow` effect asset (`Server/Entity/Effects/Status/Slow.json`,
   ~10s). To use a different duration without touching vanilla, ship an `Inkwell_`-prefixed effect and

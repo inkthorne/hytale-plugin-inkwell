@@ -1,5 +1,5 @@
 {
-  "$Comment": "Inkwell_Chicken_Annoying — a chicken with mood swings: it randomly alternates between circling the nearest player (annoying) and ordinary wandering (default), holding each mode for a random number of seconds before re-rolling. This is driven by a single built-in 'Type: Random' instruction with 'ExecuteFor': [min, max] (see vanilla Test_Random_Instruction.json); no custom code is needed beyond the Inkwell_Orbit BodyMotion. A self-contained 'Generic' role (NOT a Variant): a Variant's Modify block runs values through the expression system and rejects a structural Instructions array, so the behavior must be defined at the role's top level. Reuses the vanilla Chicken appearance (referenced vanilla id, no Inkwell_ prefix). Inkwell_Orbit is a custom BodyMotion registered by InkwellPlugin.setup().",
+  "$Comment": "Inkwell_Role_Chicken_Annoying — a chicken with mood swings: it randomly alternates between circling the nearest player (annoying) and ordinary wandering (default), holding each mode for a random number of seconds before re-rolling. This is driven by a single built-in 'Type: Random' instruction with 'ExecuteFor': [min, max] (see vanilla Test_Random_Instruction.json); no custom code is needed beyond the Inkwell_Orbit BodyMotion. A self-contained 'Generic' role (NOT a Variant): a Variant's Modify block runs values through the expression system and rejects a structural Instructions array, so the behavior must be defined at the role's top level. Reuses the vanilla Chicken appearance (referenced vanilla id, no Inkwell_ prefix). Inkwell_Orbit is a custom BodyMotion registered by InkwellPlugin.setup().",
   "Type": "Generic",
   "Appearance": "Chicken",
   "MotionControllerList": [
@@ -71,5 +71,5 @@
       ]
     }
   ],
-  "NameTranslationKey": "server.npcRoles.Inkwell_Chicken_Annoying.name"
+  "NameTranslationKey": "server.npcRoles.Inkwell_Role_Chicken_Annoying.name"
 }

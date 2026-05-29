@@ -1,6 +1,6 @@
-# Asset: `Inkwell_Chicken_Annoying`
+# Asset: `Inkwell_Role_Chicken_Annoying`
 
-**Type:** NPC role · **File:** `Server/NPC/Roles/Creature/Livestock/Inkwell_Chicken_Annoying.json`
+**Type:** NPC role · **File:** `Server/NPC/Roles/Creature/Livestock/Inkwell_Role_Chicken_Annoying.json`
 
 A chicken with **mood swings**: it randomly alternates between circling the nearest player ("annoying")
 and ordinary wandering ("default"), holding each mode for a random number of seconds before switching.
@@ -56,7 +56,7 @@ JSON value for expression`). So custom behavior must be defined at the role's to
       ]
     }
   ],
-  "NameTranslationKey": "server.npcRoles.Inkwell_Chicken_Annoying.name"
+  "NameTranslationKey": "server.npcRoles.Inkwell_Role_Chicken_Annoying.name"
 }
 ```
 
@@ -99,7 +99,7 @@ make it annoying more often):
 
 ## Spawning / testing
 
-Role id = filename without extension = `Inkwell_Chicken_Annoying`. Spawn it in-game with the built-in
+Role id = filename without extension = `Inkwell_Role_Chicken_Annoying`. Spawn it in-game with the built-in
 NPC spawn command (`NPCSpawnCommand`; confirm exact syntax via `/help`), e.g. spawn it a few blocks
 away and watch it orbit you as you move.
 

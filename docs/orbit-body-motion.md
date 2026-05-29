@@ -51,4 +51,4 @@ fallback node, e.g. `WanderInCircle`, can take over).
 
 ## Used by
 
-- [`Inkwell_Chicken_Annoying`](assets/inkwell-chicken-annoying.md) — a chicken that endlessly circles the nearest player
+- [`Inkwell_Role_Chicken_Annoying`](assets/inkwell-role-chicken-annoying.md) — a chicken that endlessly circles the nearest player
