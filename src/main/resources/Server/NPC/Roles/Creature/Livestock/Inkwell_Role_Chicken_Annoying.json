@@ -1,5 +1,5 @@
 {
-  "$Comment": "Inkwell_Role_Chicken_Annoying — a chicken with mood swings: it randomly alternates between circling the nearest player (annoying) and ordinary wandering (default), holding each mode for a random number of seconds before re-rolling. This is driven by a single built-in 'Type: Random' instruction with 'ExecuteFor': [min, max] (see vanilla Test_Random_Instruction.json); no custom code is needed beyond the Inkwell_Orbit BodyMotion. A self-contained 'Generic' role (NOT a Variant): a Variant's Modify block runs values through the expression system and rejects a structural Instructions array, so the behavior must be defined at the role's top level. Reuses the vanilla Chicken appearance (referenced vanilla id, no Inkwell_ prefix). Inkwell_Orbit is a custom BodyMotion registered by InkwellPlugin.setup().",
+  "$Comment": "Inkwell_Role_Chicken_Annoying — a chicken with mood swings. A built-in 'Type: Random' instruction with ExecuteFor [5,12] acts as a timer that randomly commits the chicken to ORBIT (circle the nearest player — the annoying mode — via the custom Inkwell_Orbit BodyMotion) or WANDER for a random 5-12s window, then re-rolls (~50/50). On an ORBIT->WANDER transition it PECKS ONCE before settling down: the orbit branch raises a per-NPC 'WasOrbiting' flag while it's actively orbiting, and the wander branch consumes that flag on the tick it takes over to fire a single blocking melee Attack (vanilla Root_NPC_Attack_Melee chain; light damage via the InteractionVars Melee_Damage override) before clearing the flag and wandering. Exactly one peck per orbit->wander switch — the blocking action list runs once and clears the flag, so it can't repeat. Built from built-in instruction primitives only (Type:Random, Flag sensor / SetFlag, Attack) plus the custom Inkwell_Orbit. A self-contained 'Generic' role (NOT a Variant): a Variant's Modify block runs values through the expression system and rejects a structural Instructions array, so behavior lives at the role's top level. Reuses the vanilla Chicken appearance (referenced vanilla id, no Inkwell_ prefix). Inkwell_Orbit is registered by InkwellPlugin.setup().",
   "Type": "Generic",
   "Appearance": "Chicken",
   "MotionControllerList": [
@@ -18,18 +18,33 @@
       "Description": "Max health for the annoying chicken"
     }
   },
+  "InteractionVars": {
+    "Melee_Damage": {
+      "Interactions": [
+        {
+          "Parent": "NPC_Attack_Melee_Damage",
+          "DamageCalculator": {
+            "Type": "Absolute",
+            "BaseDamage": {
+              "Physical": 2
+            },
+            "RandomPercentageModifier": 0.1
+          }
+        }
+      ]
+    }
+  },
   "Instructions": [
     {
+      "$Comment": "The mode timer. A Type:Random node with ExecuteFor [5,12] picks ORBIT or WANDER, commits to it for a random 5-12s window, then re-rolls — this IS the 'timer that randomly decides orbit vs wander'. The orbit->wander transition is caught with the per-NPC 'WasOrbiting' flag (see the two branches). Equal weights ~= 50/50.",
       "Type": "Random",
       "Continue": true,
       "ExecuteFor": [ 5, 12 ],
       "Instructions": [
         {
-          "$Comment": "Annoying branch. Top-level Sensor is Any so the Random node's per-tick matches() always passes (otherwise a Player-sensor branch picked with no player in range would idle for the whole window). The orbit-vs-wander choice is a nested fallthrough: orbit a sensed player, else wander.",
+          "$Comment": "ORBIT branch. Top-level Sensor is Any so a picked window always runs (a bare Player sensor would idle the whole window if no player were in range). Orbit a sensed player and raise WasOrbiting; with no player, just wander and DON'T raise the flag — so ending a player-less 'orbit' window won't fire a peck.",
           "Weight": 1,
-          "Sensor": {
-            "Type": "Any"
-          },
+          "Sensor": { "Type": "Any" },
           "Instructions": [
             {
               "Sensor": {
@@ -43,12 +58,13 @@
                 "RelativeSpeed": 0.95,
                 "RadiusGain": 0.6,
                 "Clockwise": true
-              }
+              },
+              "Actions": [
+                { "Type": "SetFlag", "Name": "WasOrbiting", "SetTo": true }
+              ]
             },
             {
-              "Sensor": {
-                "Type": "Any"
-              },
+              "Sensor": { "Type": "Any" },
               "BodyMotion": {
                 "Type": "WanderInCircle",
                 "Radius": 6,
@@ -58,15 +74,53 @@
           ]
         },
         {
+          "$Comment": "WANDER branch. If we arrived straight from orbiting (WasOrbiting set) with a player in reach, do ONE blocking peck and clear the flag — the orbit->wander attack. Otherwise clear the flag (so a player wandering into range mid-window can't trigger a stray peck) and just wander.",
           "Weight": 1,
-          "Sensor": {
-            "Type": "Any"
-          },
-          "BodyMotion": {
-            "Type": "WanderInCircle",
-            "Radius": 6,
-            "RelativeSpeed": 0.25
-          }
+          "Sensor": { "Type": "Any" },
+          "Instructions": [
+            {
+              "$Comment": "The orbit->wander peck. Gated on WasOrbiting AND a player in range. Seek (StopDistance 1.8) turns the body to face the player (while orbiting it faced its tangential heading, so the forward melee selector would otherwise miss) and a 0.35s windup with an 'Eat' head-jab; then one Attack, then clear WasOrbiting so this can't repeat. ActionsBlocking + not a Continue node, so while pecking it owns the tick and the clear/wander steps below don't run.",
+              "Sensor": {
+                "Type": "And",
+                "Sensors": [
+                  { "Type": "Flag", "Name": "WasOrbiting", "Set": true },
+                  { "Type": "Player", "Range": 6, "LockOnTarget": true }
+                ]
+              },
+              "BodyMotion": {
+                "Type": "Seek",
+                "StopDistance": 1.8,
+                "SlowDownDistance": 2.5,
+                "RelativeSpeed": 0.6,
+                "RelaxedMoveConstraints": false
+              },
+              "HeadMotion": { "Type": "Watch" },
+              "ActionsBlocking": true,
+              "Actions": [
+                { "Type": "PlayAnimation", "Slot": "Status", "Animation": "Eat" },
+                { "Type": "Timeout", "Delay": [ 0.35, 0.35 ] },
+                { "Type": "Attack", "Attack": "Root_NPC_Attack_Melee", "AttackPauseRange": [ 0, 0 ] },
+                { "Type": "PlayAnimation", "Slot": "Status" },
+                { "Type": "SetFlag", "Name": "WasOrbiting", "SetTo": false }
+              ]
+            },
+            {
+              "$Comment": "Not pecking (flag clear, or no player to peck): make sure the flag is clear so the transition can't fire later this window, then fall through to wander.",
+              "Continue": true,
+              "Sensor": { "Type": "Any" },
+              "Actions": [
+                { "Type": "SetFlag", "Name": "WasOrbiting", "SetTo": false }
+              ]
+            },
+            {
+              "Sensor": { "Type": "Any" },
+              "BodyMotion": {
+                "Type": "WanderInCircle",
+                "Radius": 6,
+                "RelativeSpeed": 0.25
+              }
+            }
+          ]
         }
       ]
     }
