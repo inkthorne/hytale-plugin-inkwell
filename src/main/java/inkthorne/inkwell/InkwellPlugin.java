@@ -37,8 +37,8 @@ public class InkwellPlugin extends JavaPlugin {
         // Must happen before assets load so referencing documents decode against the right codec.
         getCodecRegistry(Interaction.CODEC).register(
             "Inkwell_AoeEffect",
-            InkwellAoeEffectInteraction.class,
-            InkwellAoeEffectInteraction.CODEC);
+            InteractionAoeEffect.class,
+            InteractionAoeEffect.CODEC);
 
         // Register Inkwell's custom NPC body-motion types so role JSON can reference them by Type.
         // The NPC plugin owns the core-component registry; we depend on it (manifest Dependencies)

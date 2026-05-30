@@ -53,7 +53,7 @@ stale jar.)
 ```
 src/main/java/inkthorne/inkwell/
   InkwellPlugin.java                plugin entry point; registers custom types in setup()
-  InkwellAoeEffectInteraction.java  the Inkwell_AoeEffect interaction primitive
+  InteractionAoeEffect.java  the Inkwell_AoeEffect interaction primitive
 src/main/resources/
   manifest.json                     plugin metadata (Main class, server version, asset pack)
   Server/...                        bundled JSON assets (items, projectiles, interactions)

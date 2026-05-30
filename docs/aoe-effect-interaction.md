@@ -4,7 +4,7 @@ A custom interaction type that applies a status effect to **every entity within 
 executing entity's position, and optionally spawns an impact particle effect. It's most useful run
 from a projectile's `ProjectileHit`/`ProjectileMiss` to give a "blast radius" effect.
 
-- **Java:** `inkthorne.inkwell.InkwellAoeEffectInteraction` (extends `SimpleInstantInteraction`)
+- **Java:** `inkthorne.inkwell.InteractionAoeEffect` (extends `SimpleInstantInteraction`)
 - **Registered as:** `Inkwell_AoeEffect` (in `InkwellPlugin.setup()`, against the interaction codec map)
 
 ## Why it exists

@@ -39,27 +39,27 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
  *
  * <p>JSON: {@code { "Type": "Inkwell_AoeEffect", "Range": 6.0, "EffectId": "Slow" }}
  */
-public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
+public class InteractionAoeEffect extends SimpleInstantInteraction {
 
-    public static final BuilderCodec<InkwellAoeEffectInteraction> CODEC =
-        BuilderCodec.builder(InkwellAoeEffectInteraction.class, InkwellAoeEffectInteraction::new)
+    public static final BuilderCodec<InteractionAoeEffect> CODEC =
+        BuilderCodec.builder(InteractionAoeEffect.class, InteractionAoeEffect::new)
             .append(new KeyedCodec<>("Range", Codec.DOUBLE),
-                    InkwellAoeEffectInteraction::setRange, InkwellAoeEffectInteraction::getRange)
+                    InteractionAoeEffect::setRange, InteractionAoeEffect::getRange)
             .add()
             .append(new KeyedCodec<>("EffectId", Codec.STRING),
-                    InkwellAoeEffectInteraction::setEffectId, InkwellAoeEffectInteraction::getEffectId)
+                    InteractionAoeEffect::setEffectId, InteractionAoeEffect::getEffectId)
             .add()
             .append(new KeyedCodec<>("Vfx", Codec.STRING),
-                    InkwellAoeEffectInteraction::setVfx, InkwellAoeEffectInteraction::getVfx)
+                    InteractionAoeEffect::setVfx, InteractionAoeEffect::getVfx)
             .add()
             .append(new KeyedCodec<>("VfxScale", Codec.DOUBLE),
-                    InkwellAoeEffectInteraction::setVfxScale, InkwellAoeEffectInteraction::getVfxScale)
+                    InteractionAoeEffect::setVfxScale, InteractionAoeEffect::getVfxScale)
             .add()
             .append(new KeyedCodec<>("VfxDuration", Codec.DOUBLE),
-                    InkwellAoeEffectInteraction::setVfxDuration, InkwellAoeEffectInteraction::getVfxDuration)
+                    InteractionAoeEffect::setVfxDuration, InteractionAoeEffect::getVfxDuration)
             .add()
             .append(new KeyedCodec<>("CandidateMargin", Codec.DOUBLE),
-                    InkwellAoeEffectInteraction::setCandidateMargin, InkwellAoeEffectInteraction::getCandidateMargin)
+                    InteractionAoeEffect::setCandidateMargin, InteractionAoeEffect::getCandidateMargin)
             .add()
             .build();
 
@@ -74,7 +74,7 @@ public class InkwellAoeEffectInteraction extends SimpleInstantInteraction {
      *  for the bounding-box test. Must be >= the largest creature's origin-to-body-edge distance. */
     private double candidateMargin = 16.0;
 
-    public InkwellAoeEffectInteraction() {
+    public InteractionAoeEffect() {
     }
 
     public double getCandidateMargin() {
