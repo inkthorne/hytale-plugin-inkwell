@@ -74,7 +74,7 @@ at its default — the same mechanism the vanilla **undead chicken** uses to bit
   "ActionsBlocking": true,
   "Actions": [
     { "Type": "PlayAnimation", "Slot": "Status", "Animation": "Eat" },
-    { "Type": "Timeout", "Delay": [ 0.35, 0.35 ] },
+    { "Type": "Timeout", "Delay": [ 0.6, 0.6 ] },
     { "Type": "Attack", "Attack": "Root_NPC_Attack_Melee", "AttackPauseRange": [ 0, 0 ] },
     { "Type": "PlayAnimation", "Slot": "Status" },
     { "Type": "SetFlag", "Name": "WasOrbiting", "SetTo": false }
@@ -89,8 +89,10 @@ Why the structure:
   and that `SetFlag` drops `WasOrbiting` so the branch's own sensor no longer matches. No cooldown
   bookkeeping, no repeat.
 - **The `Seek` is not optional.** While orbiting, the chicken's body faces its *tangential* heading, not
-  the player; the melee selector sweeps *in front of the body*, so without turning to face the player
-  first the peck would whiff. The brief `Seek` (during the 0.35 s windup) rotates it onto the target.
+  the player; the melee selector (a narrow ~30° swept arc) sweeps *in front of the body*, so without
+  turning to face the player first the peck whiffs. The `Seek` rotates it onto the target during the
+  windup — and the windup is **0.6 s** (not a snappier 0.35 s) specifically to give it time to swing
+  ~90° around onto you; too short and it fires under-rotated and misses. It can still miss if you dodge.
 - **`AttackPauseRange [0,0]`** — the pause would only matter if the action were re-entered; the flag
   guarantees it isn't, so there's nothing to throttle.
 

@@ -79,7 +79,7 @@
           "Sensor": { "Type": "Any" },
           "Instructions": [
             {
-              "$Comment": "The orbit->wander peck. Gated on WasOrbiting AND a player in range. Seek (StopDistance 1.8) turns the body to face the player (while orbiting it faced its tangential heading, so the forward melee selector would otherwise miss) and a 0.35s windup with an 'Eat' head-jab; then one Attack, then clear WasOrbiting so this can't repeat. ActionsBlocking + not a Continue node, so while pecking it owns the tick and the clear/wander steps below don't run.",
+              "$Comment": "The orbit->wander peck. Gated on WasOrbiting AND a player in range. Seek (StopDistance 1.8) turns the body to face the player (while orbiting it faced its tangential heading, so the forward melee selector would otherwise miss) and a 0.6s windup with an 'Eat' head-jab gives it time to rotate ~90deg onto the player before the swing fires (a shorter windup left it under-rotated and whiffing); then one Attack, then clear WasOrbiting so this can't repeat. ActionsBlocking + not a Continue node, so while pecking it owns the tick and the clear/wander steps below don't run.",
               "Sensor": {
                 "Type": "And",
                 "Sensors": [
@@ -98,7 +98,7 @@
               "ActionsBlocking": true,
               "Actions": [
                 { "Type": "PlayAnimation", "Slot": "Status", "Animation": "Eat" },
-                { "Type": "Timeout", "Delay": [ 0.35, 0.35 ] },
+                { "Type": "Timeout", "Delay": [ 0.6, 0.6 ] },
                 { "Type": "Attack", "Attack": "Root_NPC_Attack_Melee", "AttackPauseRange": [ 0, 0 ] },
                 { "Type": "PlayAnimation", "Slot": "Status" },
                 { "Type": "SetFlag", "Name": "WasOrbiting", "SetTo": false }
