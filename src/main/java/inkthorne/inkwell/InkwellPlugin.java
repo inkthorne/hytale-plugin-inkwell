@@ -4,7 +4,10 @@ import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Int
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.npc.NPCPlugin;
+import inkthorne.inkwell.debug.CombatLogSystem;
+import inkthorne.inkwell.debug.InkwellCommand;
 import inkthorne.inkwell.npc.BuilderBodyMotionOrbit;
+import inkthorne.inkwell.npc.BuilderSensorFlockAttackToken;
 
 /**
  * Entry point for Inkwell — a public <b>library plugin</b> for Hytale: the shared
@@ -44,6 +47,20 @@ public class InkwellPlugin extends JavaPlugin {
         // The NPC plugin owns the core-component registry; we depend on it (manifest Dependencies)
         // so it loads first, and register before our own NPC role assets are parsed.
         NPCPlugin.get().registerCoreComponentType("Inkwell_Orbit", BuilderBodyMotionOrbit::new);
+
+        // Coordination sensor: true for only one member of a flock at a time (the attack-token holder), so a
+        // role can gate its attack on it and exactly one creature approaches+swings while the rest hang back.
+        NPCPlugin.get().registerCoreComponentType("Inkwell_FlockAttackToken", BuilderSensorFlockAttackToken::new);
+
+        // Debug combat log: one server-log line per hit involving an Inkwell creature (attacker -> victim,
+        // amount, cause, and the NPC's flock membership). Hytale has no built-in combat log; this fills that
+        // gap and lets us confirm flocking + attack timing by grepping the server log for "[CombatLog]".
+        getEntityStoreRegistry().registerSystem(new CombatLogSystem(getLogger()));
+
+        // Debug commands under the /inkwell namespace. Currently: /inkwell killrole <role> — remove all NPCs
+        // of a given role (type-filtered cleanup the vanilla /npc clean lacks), e.g.
+        // /inkwell killrole Inkwell_Role_Pack_Rat.
+        getCommandRegistry().registerCommand(new InkwellCommand());
 
         getLogger().atInfo().log("Inkwell library loaded!");
     }

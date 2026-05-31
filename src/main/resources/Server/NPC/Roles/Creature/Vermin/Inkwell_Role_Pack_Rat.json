@@ -1,0 +1,126 @@
+{
+  "$Comment": "Inkwell_Role_Pack_Rat — a Rat that swarms with HARD-gated, rotating attack turns: at any moment only ONE rat per flock is the attacker (so the player always knows who to block), it rushes in, bites once, retreats, and the turn rotates to a different rat. This needs the attack DECISION gated, which the engine's native CombatTurns can't guarantee (its attack instruction is range-only, so any rat in range swings). So this is a Generic role (NOT a Variant — a Variant's Modify can't carry Instructions) gated on the custom Inkwell_FlockAttackToken sensor (true for one flock member at a time, rotating; registered by InkwellPlugin.setup()). The holder rushes in and bites only when actually in range (else a far holder whiffs on the tick it grabs the token and wastes its turn); a per-NPC 'Inkwell_PackRat_Bit' flag makes it bite exactly once then retreat to the holding ring (hit-and-run), and the flag clears when the turn ends. Reuses vanilla Rat appearance + bite (Rat_Bite / Rat_Bite_Damage). Spawn pre-flocked so each pack coordinates on its own flock id: /npc spawn Inkwell_Role_Pack_Rat --count=1 --flock=5.",
+  "Type": "Generic",
+  "Appearance": "Rat",
+  "ApplySeparation": true,
+  "SeparationDistance": 2,
+  "SeparationWeight": 1,
+  "FlockAllowedNPC": [ "Inkwell_Role_Pack_Rat" ],
+  "FlockCanLead": true,
+  "FlockInfluenceRange": 4,
+  "MotionControllerList": [
+    {
+      "Type": "Walk",
+      "MaxWalkSpeed": 8,
+      "Gravity": 10,
+      "MaxFallSpeed": 20,
+      "Acceleration": 10
+    }
+  ],
+  "MaxHealth": { "Compute": "MaxHealth" },
+  "Parameters": {
+    "MaxHealth": {
+      "Value": 21,
+      "Description": "Max health for the pack rat (matches the vanilla Rat)."
+    }
+  },
+  "InteractionVars": {
+    "Melee_Start": {
+      "Interactions": [
+        {
+          "Parent": "Rat_Bite",
+          "Effects": { "ItemPlayerAnimationsId": "Rat_Default", "ItemAnimationId": "Bite" },
+          "RunTime": 0.117
+        }
+      ]
+    },
+    "Bite_Damage": {
+      "Interactions": [
+        {
+          "Parent": "Rat_Bite_Damage",
+          "DamageCalculator": {
+            "Type": "Absolute",
+            "BaseDamage": { "Physical": 4 },
+            "RandomPercentageModifier": 0.1
+          },
+          "DamageEffects": { "Knockback": { "Force": 0.5 } }
+        }
+      ]
+    }
+  },
+  "Instructions": [
+    {
+      "$Comment": "Combat — a player is within 30. The flock's one token-holder rushes in, bites once, and retreats; everyone else holds at distance.",
+      "Sensor": { "Type": "Player", "Range": 30, "LockOnTarget": true },
+      "Instructions": [
+        {
+          "$Comment": "TOKEN HOLDER: owns the flock's attack turn (the And gates on holding the token AND a player in range, which also locks the target).",
+          "Sensor": {
+            "Type": "And",
+            "Sensors": [
+              { "Type": "Player", "Range": 30, "LockOnTarget": true },
+              { "Type": "Inkwell_FlockAttackToken" }
+            ]
+          },
+          "Instructions": [
+            {
+              "$Comment": "In bite range and not yet bitten this turn: face + bite ONCE, hold position until the bite actually lands, THEN raise the Bit flag so the retreat branch takes over. The Timeout is essential: the Attack only *starts* the Rat_Bite chain (windup -> selector -> recovery, ~0.4s, damage lands mid-way); without the hold the flag flips immediately and the rat retreats out of range before the swing connects. The Seek (StopDistance 1.5) keeps it in range and facing through the swing. AttackPauseRange [0,0] because the flag (not a cooldown) enforces one bite per turn.",
+              "Sensor": {
+                "Type": "And",
+                "Sensors": [
+                  { "Type": "Player", "Range": 2.4, "LockOnTarget": true },
+                  { "Type": "Flag", "Name": "Inkwell_PackRat_Bit", "Set": false }
+                ]
+              },
+              "BodyMotion": { "Type": "Seek", "StopDistance": 1.5, "SlowDownDistance": 2.5, "RelativeSpeed": 0.45 },
+              "HeadMotion": { "Type": "Watch" },
+              "ActionsBlocking": true,
+              "Actions": [
+                { "Type": "Attack", "Attack": "Root_NPC_Rat_Attack", "AttackPauseRange": [ 0, 0 ] },
+                { "Type": "Timeout", "Delay": [ 0.45, 0.45 ] },
+                { "Type": "SetFlag", "Name": "Inkwell_PackRat_Bit", "SetTo": true }
+              ]
+            },
+            {
+              "$Comment": "Already bit this turn: RETREAT to the ring immediately (hit-and-run). Still the token holder, so no other rat engages until this turn rotates.",
+              "Sensor": {
+                "Type": "And",
+                "Sensors": [
+                  { "Type": "Player", "Range": 30, "LockOnTarget": true },
+                  { "Type": "Flag", "Name": "Inkwell_PackRat_Bit", "Set": true }
+                ]
+              },
+              "BodyMotion": { "Type": "MaintainDistance", "DesiredDistanceRange": [ 5, 7 ], "RelativeForwardsSpeed": 0.7, "RelativeBackwardsSpeed": 0.9 },
+              "HeadMotion": { "Type": "Watch" }
+            },
+            {
+              "$Comment": "Holding the token, not yet in range, not bitten: rush in.",
+              "Sensor": { "Type": "Player", "Range": 30, "LockOnTarget": true },
+              "BodyMotion": { "Type": "Seek", "StopDistance": 1.5, "SlowDownDistance": 3, "RelativeSpeed": 0.95 },
+              "HeadMotion": { "Type": "Watch" }
+            }
+          ]
+        },
+        {
+          "$Comment": "NON-HOLDER: clear the Bit flag (so our next turn bites fresh) and hold/strafe at 5-7 blocks, visibly waiting. Out of bite range, so never swings — the player only ever has one rat to block.",
+          "Sensor": { "Type": "Player", "Range": 30, "LockOnTarget": true },
+          "Actions": [ { "Type": "SetFlag", "Name": "Inkwell_PackRat_Bit", "SetTo": false } ],
+          "BodyMotion": {
+            "Type": "MaintainDistance",
+            "DesiredDistanceRange": [ 5, 7 ],
+            "StrafingDurationRange": [ 3, 5 ],
+            "StrafingFrequencyRange": [ 2, 4 ],
+            "RelativeForwardsSpeed": 0.6,
+            "RelativeBackwardsSpeed": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "$Comment": "No player nearby: wander.",
+      "Sensor": { "Type": "Any" },
+      "BodyMotion": { "Type": "WanderInCircle", "Radius": 8, "RelativeSpeed": 0.3 }
+    }
+  ],
+  "NameTranslationKey": "server.npcRoles.Inkwell_Role_Pack_Rat.name"
+}
