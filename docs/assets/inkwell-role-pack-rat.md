@@ -2,82 +2,96 @@
 
 **Type:** NPC role · **File:** `Server/NPC/Roles/Creature/Vermin/Inkwell_Role_Pack_Rat.json`
 
-A vanilla **Rat** that hunts as a **coordinated swarm**: the pack surrounds you, and **one rat at a
-time** darts in, bites once, and peels back out — then a *different* rat takes the next turn. The player
-always faces a single, identifiable attacker (you know who to block), not a dogpile.
+A vanilla **Rat** that hunts as a **coordinated swarm that forms on contact**. Rats wander solo; when one
+spots you it **rallies a pack** of nearby rats, and that pack attacks as a unit — the ring surrounds you and
+**one rat at a time** darts in, bites once, and peels back out, then a *different* rat takes the next turn.
+You always face a single, identifiable attacker (you know who to block), not a dogpile. Lose the pack and it
+**disperses**, free to re-form on the next encounter.
 
-It reuses the vanilla Rat's appearance and bite, but defines its own AI. It is a **`Generic` role, not a
-`Variant`** — a `Variant`'s `Modify` block can't carry an inline `Instructions` array, and this role's
-whole point is custom combat instructions (same reason the [Annoying Chicken](inkwell-role-chicken-annoying.md)
-is `Generic`).
+It reuses the vanilla Rat's appearance and bite but defines its own AI. It is a **`Generic` role, not a
+`Variant`** — a `Variant`'s `Modify` can't carry an inline `Instructions` array, and this role's whole point
+is custom combat instructions (same reason the [Annoying Chicken](inkwell-role-chicken-annoying.md) is `Generic`).
 
 ## How it works
 
-The coordination is a custom sensor, [`Inkwell_FlockAttackToken`](../flock-attack-token.md), that is
-`true` for exactly **one** flock member at a time (a shared "attack token", held ~5 s, then rotated). The
-combat instruction tree is gated on it:
+Two custom primitives plus the engine's flock system do the work:
 
-1. **Token holder** (`And[Player, Inkwell_FlockAttackToken]`):
-   - **not yet in bite range** → `Seek` rushes in;
-   - **in bite range** (`Player Range 2.4`) → face the target, **bite once**, then raise a per-rat
-     `Inkwell_PackRat_Bit` flag;
-   - **already bit this turn** (flag set) → `MaintainDistance` **retreats** to the 5–7 block ring
-     (hit-and-run). It stays the token-holder for the rest of the window, so no one else engages early.
-2. **Non-holders** → `MaintainDistance` hold/strafe at 5–7 blocks (out of bite range, so they never
-   swing) and clear the `Bit` flag so their next turn bites fresh.
-3. **No player** → wander.
+1. **Form the pack — [`Inkwell_RecruitFlock`](../recruit-flock-action.md).** When a not-yet-flocked rat senses
+   a player (within ~18), this action creates an engine flock, recruits up to **`FlockSize`-1** same-role rats
+   within **`FlockRadius`**, and locks the player as **every** member's target — so even recruits that never
+   saw you converge. It enforces **one flock per (role, target)**: other rats that aggro the same player join
+   that one pack (if there's room) or stay out, rather than stacking extra packs.
+2. **Take turns — [`Inkwell_FlockAttackToken`](../flock-attack-token.md).** A sensor that's `true` for exactly
+   one flock member at a time (a shared attack token, held ~5 s, then rotated). The combat tree is gated on it.
+3. **The engine flock** gives leader election + **succession on leader death**, the join cap, and
+   dissolve-when-small for free.
 
-### Two details that took iterating to get right
+Combat is keyed on the **marked target** (a `Target` sensor reading the `LockedTarget` the recruit action set),
+**not** a fresh `Player` sense — so a recruit with no line of sight still chases and attacks. The role's phases:
 
-- **Gate the attack on bite range, not just on holding the token.** If the holder fires `Attack` the
-  instant it grabs the token, a far holder swings at air and burns its turn. The in-range (`Player 2.4`)
-  sub-gate makes it approach first.
-- **Hold position through the swing before retreating.** The `Attack` action only *starts* the
-  `Rat_Bite` chain (~0.4 s; damage lands mid-way). The bite branch is `ActionsBlocking` with
-  `[Attack, Timeout 0.45s, SetFlag Bit]` — the `Timeout` keeps it in range/facing until the hit
-  connects, *then* it flips to retreat. Without it the rat pulls back mid-swing and whiffs.
+- **Aggro (not in a flock):** `Player` within 18 → run `Inkwell_RecruitFlock`.
+- **In a flock:** driven by the marked `Target`:
+  - **token holder** → rush in; **bite once when in range** (`Target Range 2.4`), holding through the swing,
+    then **retreat** to the 5–7 ring via a per-rat `Inkwell_PackRat_Bit` flag (hit-and-run).
+  - **non-holder** → `MaintainDistance` at 5–7, waiting its turn (out of bite range, never swings).
+  - **disperse** → a `Disband` alarm is re-armed every tick the target is within leash (35); once the target
+    is lost it `Passes` ~5 s later and the rat `LeaveFlock`s. Below 2 members the engine dissolves the flock.
+- **No flock, no target:** wander.
+
+### Details that took iterating to get right
+
+- **Gate the bite on range, not just on holding the token** — else a far holder swings on the tick it grabs
+  the token, whiffs, and burns its turn approaching.
+- **Hold through the swing before retreating** — `Attack` only *starts* the ~0.4 s `Rat_Bite` chain, so the
+  bite branch is `ActionsBlocking` `[Attack, Timeout 0.45s, SetFlag Bit]`; without the `Timeout` it pulls back
+  mid-swing and misses.
+- **`createFlock`/`join` populate the member group a tick late**, so the recruit action validates a flock by
+  its `Flock` component (not member count) and caps pack size with its own counter — see the
+  [`Inkwell_RecruitFlock`](../recruit-flock-action.md) notes.
 
 ## Fields
 
 | Field | Value | Notes |
 |-------|-------|-------|
 | `Type` | `Generic` | Self-contained role carrying inline `Instructions` (a `Variant` can't). |
-| `Appearance` / bite | `Rat` / `Rat_Bite` + `Rat_Bite_Damage` | Reused vanilla ids; bite bound via top-level `InteractionVars` (`Melee_Start`/`Bite_Damage`), 4 physical. |
-| `FlockAllowedNPC` / `FlockCanLead` | `["Inkwell_Role_Pack_Rat"]` / `true` | Lets `/npc spawn … --flock=N` form a shared flock so each pack coordinates on its own token. |
+| `Appearance` / bite | `Rat` / `Rat_Bite` + `Rat_Bite_Damage` | Reused vanilla ids; bite bound via top-level `InteractionVars`, 4 physical. |
+| `FlockAllowedNPC` / `FlockCanLead` | `["Inkwell_Role_Pack_Rat"]` / `true` | Lets the recruit action create/join an engine flock of this role. |
 | `ApplySeparation` | `true` | Crowd separation so the waiting ring doesn't stack. |
-| combat `Instructions` | (inline) | Token-gated approach → bite → retreat; non-holders hold; else wander. |
+| recruit action | `{ "Type": "Inkwell_RecruitFlock", "FlockSize": 5, "FlockRadius": 16 }` | **Where pack size & recruit radius are set.** |
 
 ### Tuning knobs
 
-- **Turn cadence & rotation** live in the sensor's Java constants — see
-  [`Inkwell_FlockAttackToken` → Tuning](../flock-attack-token.md#tuning-java-constants-in-sensorflockattacktoken)
-  (`INTERVAL_MILLIS`, `REHOLD_COOLDOWN_MILLIS`).
-- **`Timeout` `[0.45,0.45]`** in the bite branch — how long it commits to the strike before peeling off.
-  Longer = more "stays to bite"; too short = whiffs.
-- **`MaintainDistance.DesiredDistanceRange` `[5,7]`** — how far the ring (and the post-bite retreat) sits.
+- **`FlockSize` / `FlockRadius`** (on the recruit action, role JSON) — max pack size (incl. the rat that
+  aggro'd) and how far it looks for pack-mates. `FlockSize` works up to the engine flock cap (~8).
+- **Aggro range** — the `Player` sensor `Range` (18) on the recruit instruction.
+- **Disperse grace** — the `SetAlarm … "PT5S"` duration; leash = the combat `Target` `Range` (35).
+- **Turn cadence & rotation** — Java constants in [`Inkwell_FlockAttackToken`](../flock-attack-token.md#tuning-java-constants-in-sensorflockattacktoken).
+- **`Timeout` `[0.45,0.45]`** — how long it commits to the strike before peeling off.
 - **`Bite_Damage` `4` physical** — per-bite damage (low; it's a swarm).
 
 ## Spawning / testing
 
-**Spawn pre-flocked** so the pack shares one token (see [server command notes](#) below):
+No special flock spawn needed — packs form on contact. Scatter some loose rats and walk into them:
 
 ```
-/npc spawn Inkwell_Role_Pack_Rat --count=1 --flock=5
+/npc spawn Inkwell_Role_Pack_Rat --count=8 --radius=6
 ```
 
-> **`--count` × `--flock` multiply.** `--count` is the number of *flocks*; each spawns `--flock` members.
-> So `--count=1 --flock=5` = one pack of 5. (`--count=5 --flock=5` = 25, in 5 packs.) Optional args use
-> `--name=value`; clear leftovers with `/npc clean` (no role filter) or `/inkwell killrole Inkwell_Role_Pack_Rat`.
+> Optional args use `--name=value`. Clear leftovers with `/npc clean` (all NPCs) or
+> `/inkwell killrole Inkwell_Role_Pack_Rat` (just these). Spawning *with* `--flock=N` still works and just
+> pre-seeds one engine flock, but it's no longer required.
 
-Then let a pack swarm you and confirm: one rat darts in, bites, retreats; a *different* rat takes the next
-turn (~5 s); the rest circle at distance. The plugin's combat-log (server log, `[CombatLog]` lines) shows
-each landed hit with the attacker's flock membership — handy for confirming the cadence and rotation.
+Walk up to one rat: it should rally a single pack of up to `FlockSize` (including rats too far to have seen
+you), swarm in the rotating one-at-a-time pattern, and disperse a few seconds after you escape — then re-form
+on the next approach. The plugin's combat log (server log, `[CombatLog]` lines) shows each landed hit with its
+flock id; a single shared id (rotating across members) confirms one coordinated pack.
 
 > **Why not native flocking?** The engine's `CombatTurns` only *moves* non-attackers away; any rat left in
-> range still swings, so it can't guarantee a single attacker. Hard-gating the attack decision (this role)
-> is the only way to get "one rat at a time." See [`Inkwell_FlockAttackToken`](../flock-attack-token.md).
+> range still swings, so it can't guarantee a single attacker. Hard-gating the attack decision (this role) is
+> the only way to get "one rat at a time." See [`Inkwell_FlockAttackToken`](../flock-attack-token.md).
 
 ## Related
 
-- [`Inkwell_FlockAttackToken`](../flock-attack-token.md) — the one-attacker-at-a-time sensor this role is built on
+- [`Inkwell_RecruitFlock`](../recruit-flock-action.md) — the runtime pack-formation action
+- [`Inkwell_FlockAttackToken`](../flock-attack-token.md) — the one-attacker-at-a-time sensor
 - [Annoying Chicken](inkwell-role-chicken-annoying.md) — the other Inkwell creature (custom AI via `Inkwell_Orbit`)

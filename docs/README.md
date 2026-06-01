@@ -24,12 +24,13 @@ Building blocks other content can reference by `Type` in JSON.
 - [`Inkwell_AoeEffect` — area-of-effect status applier](aoe-effect-interaction.md)
 - [`Inkwell_Orbit` — orbit-the-target NPC body motion](orbit-body-motion.md)
 - [`Inkwell_FlockAttackToken` — one-attacker-at-a-time NPC sensor](flock-attack-token.md)
+- [`Inkwell_RecruitFlock` — runtime aggro-triggered flock formation (NPC action)](recruit-flock-action.md)
 
 ## Content
 
 - [Frost Staff](frost-staff.md) — ice staff whose projectile slows everything in a small blast radius
 - [Annoying Chicken](assets/inkwell-role-chicken-annoying.md) — a chicken NPC that endlessly circles the nearest player
-- [Pack Rat](assets/inkwell-role-pack-rat.md) — a rat NPC that swarms in coordinated, rotating one-at-a-time hit-and-run attacks
+- [Pack Rat](assets/inkwell-role-pack-rat.md) — a rat NPC that forms a pack on contact and swarms in coordinated, rotating one-at-a-time hit-and-run attacks
 
 ## Asset reference
 
