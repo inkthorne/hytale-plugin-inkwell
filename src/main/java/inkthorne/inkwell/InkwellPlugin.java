@@ -9,6 +9,7 @@ import inkthorne.inkwell.debug.InkwellCommand;
 import inkthorne.inkwell.npc.BuilderActionRecruitFlock;
 import inkthorne.inkwell.npc.BuilderBodyMotionOrbit;
 import inkthorne.inkwell.npc.BuilderSensorFlockAttackToken;
+import inkthorne.inkwell.npc.InkwellBuilderBodyMotionMaintainDistance;
 
 /**
  * Entry point for Inkwell — a public <b>library plugin</b> for Hytale: the shared
@@ -48,6 +49,10 @@ public class InkwellPlugin extends JavaPlugin {
         // The NPC plugin owns the core-component registry; we depend on it (manifest Dependencies)
         // so it loads first, and register before our own NPC role assets are parsed.
         NPCPlugin.get().registerCoreComponentType("Inkwell_Orbit", BuilderBodyMotionOrbit::new);
+
+        // MaintainDistance variant with a FaceMovementDirection option (vanilla locks body yaw to the target,
+        // which reads as strafing/back-pedalling; this can instead face the movement direction).
+        NPCPlugin.get().registerCoreComponentType("Inkwell_MaintainDistance", InkwellBuilderBodyMotionMaintainDistance::new);
 
         // Coordination sensor: true for only one member of a flock at a time (the attack-token holder), so a
         // role can gate its attack on it and exactly one creature approaches+swings while the rest hang back.

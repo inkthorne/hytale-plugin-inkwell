@@ -120,7 +120,7 @@
                   { "Type": "Flag", "Name": "Inkwell_PackRat_Bit", "Set": true }
                 ]
               },
-              "BodyMotion": { "Type": "MaintainDistance", "DesiredDistanceRange": [ 5, 7 ], "RelativeForwardsSpeed": 0.7, "RelativeBackwardsSpeed": 0.9 },
+              "BodyMotion": { "Type": "Inkwell_MaintainDistance", "FaceMovementDirection": true, "DesiredDistanceRange": [ 5, 7 ], "RelativeForwardsSpeed": 0.7, "RelativeBackwardsSpeed": 0.9 },
               "HeadMotion": { "Type": "Watch" }
             },
             {
@@ -136,7 +136,8 @@
           "Sensor": { "Type": "Target", "TargetSlot": "LockedTarget", "Range": 35 },
           "Actions": [ { "Type": "SetFlag", "Name": "Inkwell_PackRat_Bit", "SetTo": false } ],
           "BodyMotion": {
-            "Type": "MaintainDistance",
+            "Type": "Inkwell_MaintainDistance",
+            "FaceMovementDirection": true,
             "DesiredDistanceRange": [ 5, 7 ],
             "StrafingDurationRange": [ 3, 5 ],
             "StrafingFrequencyRange": [ 2, 4 ],
