@@ -93,12 +93,11 @@ flock id; a single shared id (rotating across members) confirms one coordinated 
 
 ## Known limitations / future work
 
-- **A pack does NOT refill after a member dies.** [`Inkwell_RecruitFlock`](../recruit-flock-action.md) caps
-  size with a logical counter that only counts *up* (it can't safely decrement, because the engine's member
-  group lags a tick). So once a pack reaches `FlockSize`, losing members won't let it top back up — it only
-  resets when the whole flock dissolves (then the next aggro forms a fresh one). Refill-on-death would need a
-  death hook that decrements the counter. *(This corrects an earlier assumption that packs reinforce after a
-  death — they don't.)*
+- **A pack refills after a member dies** — but only from rats that wander into aggro.
+  [`Inkwell_RecruitFlock`](../recruit-flock-action.md) caps size with a logical counter that increments on join
+  and decrements when a member dies (via a death hook), so a freed slot is topped back up by the **next roaming
+  same-role rat that aggros the same target**. It is *not* conjured: if no uncommitted rat is in sensor range,
+  the pack stays below `FlockSize` until one wanders in.
 - **`FlockSize` is capped at the engine flock max (~8)** unless the recruit action is given a `FlockAsset`
   with a larger `maxGrowSize`.
 - **One pack per (role, target), not a global cap.** Different targets — or different roles — each get their

@@ -68,13 +68,20 @@ sense — so recruits with no line of sight still engage. Pair with
 Pack size/radius are JSON params (above). The disperse behavior lives in the **role** (a re-armed `Disband`
 alarm → `LeaveFlock`), not here.
 
-### Limitation: the size counter only counts up
+### Pack refill: the counter decrements on member death
 
-The per-pack `AtomicInteger` increments on join but **never decrements** (a member dying/leaving is handled by
-the engine's deferred systems, which this action can't cheaply observe in-tick). Consequence: **a pack won't
-refill after a member dies** — once it hits `FlockSize` it stays "full" to this action until the whole flock
-dissolves (registry entry goes stale → next aggro forms a fresh pack). Refill-on-death would require hooking
-`FlockMembership` removal to decrement the counter.
+The per-pack `AtomicInteger` increments on join and **decrements when a member dies**, so a pack tops back up
+instead of dwindling. The counter is the *sole* source of truth for capacity — the engine's member group count
+is never read for it, because that count lags a tick on both joins and removals (reading it would race a
+cluster of same-tick aggros past `FlockSize`, and lag a death by a tick).
+
+The decrement is driven by a death hook (`FlockMemberDeathSystem`, an `OnDeathSystem`): each pack is also
+indexed by its **flock UUID**, and on a flock member's death that hook calls `noteMemberDeparted(flockId)` to
+free the slot. This works because `createFlock` stamps the flock entity with a `UUIDComponent` and `join`
+copies that UUID onto every member as its `FlockMembership.flockId` — so a dead member maps back to its pack in
+O(1) with no lag. A freed slot is refilled by the **next roaming same-role NPC that aggros the same target**
+(it's not conjured — if no uncommitted same-role NPC is in sensor range, the pack stays below `FlockSize` until
+one wanders into aggro).
 
 ## Used by
 

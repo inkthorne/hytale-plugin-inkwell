@@ -5,10 +5,12 @@ import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.npc.NPCPlugin;
 import inkthorne.inkwell.debug.CombatLogSystem;
+import inkthorne.inkwell.debug.DeathLogSystem;
 import inkthorne.inkwell.debug.InkwellCommand;
 import inkthorne.inkwell.npc.BuilderActionRecruitFlock;
 import inkthorne.inkwell.npc.BuilderBodyMotionOrbit;
 import inkthorne.inkwell.npc.BuilderSensorFlockAttackToken;
+import inkthorne.inkwell.npc.FlockMemberDeathSystem;
 import inkthorne.inkwell.npc.InkwellBuilderBodyMotionMaintainDistance;
 
 /**
@@ -62,10 +64,19 @@ public class InkwellPlugin extends JavaPlugin {
         // a flock and rallies them on the target — so packs form dynamically on contact, not at spawn time.
         NPCPlugin.get().registerCoreComponentType("Inkwell_RecruitFlock", BuilderActionRecruitFlock::new);
 
+        // Pack refill: when a flock member dies, free its reserved slot in the recruit action's pack counter so
+        // the pack tops back up on the next roaming same-role aggro (the counter is the source of truth for
+        // capacity; the engine's flock group count lags a tick, so a death has to be reported explicitly).
+        getEntityStoreRegistry().registerSystem(new FlockMemberDeathSystem());
+
         // Debug combat log: one server-log line per hit involving an Inkwell creature (attacker -> victim,
         // amount, cause, and the NPC's flock membership). Hytale has no built-in combat log; this fills that
         // gap and lets us confirm flocking + attack timing by grepping the server log for "[CombatLog]".
         getEntityStoreRegistry().registerSystem(new CombatLogSystem(getLogger()));
+
+        // Death log: mark Inkwell-creature deaths in the combat log (the killing hit is already logged) — purely
+        // observational, alongside CombatLogSystem. The actual pack refill is handled by FlockMemberDeathSystem.
+        getEntityStoreRegistry().registerSystem(new DeathLogSystem(getLogger()));
 
         // Debug commands under the /inkwell namespace. Currently: /inkwell killrole <role> — remove all NPCs
         // of a given role (type-filtered cleanup the vanilla /npc clean lacks), e.g.

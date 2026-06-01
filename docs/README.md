@@ -51,5 +51,8 @@ stable release):
 - **Combat log** — `inkthorne.inkwell.debug.CombatLogSystem` writes one `[CombatLog]` server-log line per
   hit involving an Inkwell creature (`attacker -> victim | amount cause`, plus the NPC's flock id). Hytale
   has no built-in combat log; this fills the gap for verifying attack timing/coordination.
+- **Death log** — `inkthorne.inkwell.debug.DeathLogSystem` writes a `[CombatLog] <role>[flock=…] DIED` line
+  when an Inkwell creature dies, so deaths sit alongside the hits. Purely observational — the actual pack
+  refill on death is core (`inkthorne.inkwell.npc.FlockMemberDeathSystem`), not a debug aid.
 - **`/inkwell killrole <roleId>`** — removes all NPCs of a given role (the type-filtered cleanup vanilla
   `/npc clean` lacks). `inkthorne.inkwell.debug.{InkwellCommand,KillRoleCommand}`.

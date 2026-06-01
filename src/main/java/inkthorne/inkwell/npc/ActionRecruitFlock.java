@@ -2,6 +2,7 @@ package inkthorne.inkwell.npc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
@@ -45,14 +46,21 @@ import org.joml.Vector3d;
  * populates a flock's {@code EntityGroup} via a deferred system, so right after {@code createFlock}/{@code join}
  * the group still reports 0 members for the rest of the tick. Relying on it made every same-tick aggro create
  * its own flock (and overshoot the size). So we (a) treat a just-created flock as alive without requiring
- * members yet, (b) get-or-create atomically via {@link ConcurrentHashMap#compute}, and (c) cap size with our
- * own {@link AtomicInteger}.
+ * members yet, (b) get-or-create atomically via {@link ConcurrentHashMap#compute}, (c) cap size with our own
+ * {@link AtomicInteger}, and (d) free a slot when a member dies (via {@link #noteMemberDeparted}, driven by a
+ * death hook) so the pack refills on the next roaming same-role aggro instead of dwindling.
  */
 public class ActionRecruitFlock extends ActionBase {
 
     /** (roleName | targetUuid) -> the one pack currently attacking that target. Self-heals: a dissolved flock
      * fails {@link #isFlockAlive} on lookup and is replaced. Process-global. */
     private static final ConcurrentHashMap<String, Pack> PACKS = new ConcurrentHashMap<>();
+
+    /** flockUuid -> the same {@link Pack}, so a member's death can find its pack and free its slot (see
+     * {@link #noteMemberDeparted}). Keyed by the flock entity's UUID, which is exactly what each member stores
+     * as its {@code FlockMembership.flockId}. Kept in lock-step with {@link #PACKS}: a pack is put here when
+     * created and removed when its dead flock is replaced. Process-global. */
+    private static final ConcurrentHashMap<UUID, Pack> PACKS_BY_FLOCK = new ConcurrentHashMap<>();
 
     private final int flockSize;
     private final double flockRadius;
@@ -92,7 +100,15 @@ public class ActionRecruitFlock extends ActionBase {
                 return prev;
             }
             created[0] = true;
-            return new Pack(FlockPlugin.createFlock(store, role));
+            if (prev != null && prev.flockUuid != null) {
+                PACKS_BY_FLOCK.remove(prev.flockUuid, prev); // evict the dead flock we're replacing
+            }
+            Ref<EntityStore> flockRef = FlockPlugin.createFlock(store, role);
+            Pack fresh = new Pack(flockRef, flockUuid(flockRef, store));
+            if (fresh.flockUuid != null) {
+                PACKS_BY_FLOCK.put(fresh.flockUuid, fresh);
+            }
+            return fresh;
         });
 
         // Join this pack (counter-capped at FlockSize), then — only if we created it — recruit nearby rats.
@@ -118,7 +134,15 @@ public class ActionRecruitFlock extends ActionBase {
         }
     }
 
-    /** Join {@code ref} to the pack if it's under {@code flockSize}; returns false if the pack is already full. */
+    /**
+     * Join {@code ref} to the pack if it's under {@code flockSize}; returns false if the pack is already full.
+     *
+     * <p>The {@link Pack#count} reservation counter is the <b>sole</b> source of truth for capacity — never the
+     * engine's {@code EntityGroup.size()}, which lags a tick on both joins and removals (so reading it races a
+     * cluster of same-tick aggros past {@code flockSize}, and lags a death by a tick). The counter is incremented
+     * here on join and decremented by {@link #noteMemberDeparted} when a member dies, keeping a freed slot exact
+     * and immediately refillable by the next roaming same-role NPC that aggros this target.
+     */
     private boolean tryJoin(Ref<EntityStore> ref, Pack pack, Ref<EntityStore> target, Store<EntityStore> store) {
         int n = pack.count.incrementAndGet();
         if (n > flockSize) {
@@ -132,6 +156,21 @@ public class ActionRecruitFlock extends ActionBase {
         FlockMembershipSystems.join(ref, pack.flockRef, store);
         setTarget(ref, target, store);
         return true;
+    }
+
+    /**
+     * A flock member died — free its reserved slot so a roaming same-role NPC can refill the pack on its next
+     * aggro. Called from the death hook with the dead member's {@code FlockMembership.flockId}. No-op if the
+     * flock isn't one of ours (e.g. a vanilla flock) or has already been replaced; the counter floors at 0.
+     */
+    public static void noteMemberDeparted(UUID flockId) {
+        if (flockId == null) {
+            return;
+        }
+        Pack pack = PACKS_BY_FLOCK.get(flockId);
+        if (pack != null) {
+            pack.count.updateAndGet(n -> n > 0 ? n - 1 : 0);
+        }
     }
 
     private static String targetKey(String roleName, Ref<EntityStore> target, Store<EntityStore> store) {
@@ -155,6 +194,13 @@ public class ActionRecruitFlock extends ActionBase {
         return group == null || !group.isDissolved();
     }
 
+    /** The flock entity's UUID (stamped by {@code createFlock}) — the same value each member stores as its
+     * {@code FlockMembership.flockId}, so it keys {@link #PACKS_BY_FLOCK}. Null if the component is missing. */
+    private static UUID flockUuid(Ref<EntityStore> flockRef, Store<EntityStore> store) {
+        UUIDComponent uuid = store.getComponent(flockRef, UUIDComponent.getComponentType());
+        return uuid != null ? uuid.getUuid() : null;
+    }
+
     private static Ref<EntityStore> sensedTarget(InfoProvider sensorInfo) {
         if (sensorInfo == null) {
             return null;
@@ -176,13 +222,16 @@ public class ActionRecruitFlock extends ActionBase {
         }
     }
 
-    /** Registry value: the owning flock + a logical member count (the engine's group count lags a tick). */
+    /** Registry value: the owning flock (its entity ref + UUID) plus the logical member count that is the sole
+     * source of truth for capacity (the engine's group count lags a tick — see {@link #tryJoin}). */
     private static final class Pack {
         final Ref<EntityStore> flockRef;
+        final UUID flockUuid;
         final AtomicInteger count = new AtomicInteger(0);
 
-        Pack(Ref<EntityStore> flockRef) {
+        Pack(Ref<EntityStore> flockRef, UUID flockUuid) {
             this.flockRef = flockRef;
+            this.flockUuid = flockUuid;
         }
     }
 }
