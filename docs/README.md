@@ -23,6 +23,7 @@ Building blocks other content can reference by `Type` in JSON.
 
 - [`Inkwell_AoeEffect` — area-of-effect status applier](aoe-effect-interaction.md)
 - [`Inkwell_Orbit` — orbit-the-target NPC body motion](orbit-body-motion.md)
+- [`Inkwell_MaintainDistance` — MaintainDistance with an optional face-movement-direction mode](maintain-distance-body-motion.md)
 - [`Inkwell_FlockAttackToken` — one-attacker-at-a-time NPC sensor](flock-attack-token.md)
 - [`Inkwell_RecruitFlock` — runtime aggro-triggered flock formation (NPC action)](recruit-flock-action.md)
 

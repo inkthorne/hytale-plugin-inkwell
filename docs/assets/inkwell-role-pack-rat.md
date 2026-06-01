@@ -33,7 +33,8 @@ Combat is keyed on the **marked target** (a `Target` sensor reading the `LockedT
 - **In a flock:** driven by the marked `Target`:
   - **token holder** → rush in; **bite once when in range** (`Target Range 2.4`), holding through the swing,
     then **retreat** to the 5–7 ring via a per-rat `Inkwell_PackRat_Bit` flag (hit-and-run).
-  - **non-holder** → `MaintainDistance` at 5–7, waiting its turn (out of bite range, never swings).
+  - **non-holder** → [`Inkwell_MaintainDistance`](../maintain-distance-body-motion.md) (`FaceMovementDirection`)
+    at 5–7, waiting its turn (out of bite range, never swings).
   - **disperse** → a `Disband` alarm is re-armed every tick the target is within leash (35); once the target
     is lost it `Passes` ~5 s later and the rat `LeaveFlock`s. Below 2 members the engine dissolves the flock.
 - **No flock, no target:** wander.
@@ -94,4 +95,5 @@ flock id; a single shared id (rotating across members) confirms one coordinated 
 
 - [`Inkwell_RecruitFlock`](../recruit-flock-action.md) — the runtime pack-formation action
 - [`Inkwell_FlockAttackToken`](../flock-attack-token.md) — the one-attacker-at-a-time sensor
+- [`Inkwell_MaintainDistance`](../maintain-distance-body-motion.md) — the ring/retreat motion (faces its movement direction, not the target)
 - [Annoying Chicken](inkwell-role-chicken-annoying.md) — the other Inkwell creature (custom AI via `Inkwell_Orbit`)
