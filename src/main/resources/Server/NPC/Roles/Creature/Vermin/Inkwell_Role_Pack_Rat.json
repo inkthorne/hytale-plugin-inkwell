@@ -1,5 +1,5 @@
 {
-  "$Comment": "Inkwell_Role_Pack_Rat — a Rat that swarms with HARD-gated, rotating attack turns: at any moment only ONE rat per flock is the attacker (so the player always knows who to block), it rushes in, bites once, retreats, and the turn rotates to a different rat. This needs the attack DECISION gated, which the engine's native CombatTurns can't guarantee (its attack instruction is range-only, so any rat in range swings). So this is a Generic role (NOT a Variant — a Variant's Modify can't carry Instructions) gated on the custom Inkwell_FlockAttackToken sensor (true for one flock member at a time, rotating; registered by InkwellPlugin.setup()). The holder rushes in and bites only when actually in range (else a far holder whiffs on the tick it grabs the token and wastes its turn); a per-NPC 'Inkwell_PackRat_Bit' flag makes it bite exactly once then retreat to the holding ring (hit-and-run), and the flag clears when the turn ends. Reuses vanilla Rat appearance + bite (Rat_Bite / Rat_Bite_Damage). Spawn pre-flocked so each pack coordinates on its own flock id: /npc spawn Inkwell_Role_Pack_Rat --count=1 --flock=5.",
+  "$Comment": "Inkwell_Role_Pack_Rat — rats that form a swarm DYNAMICALLY when one aggros. Rats wander solo; when a lone rat senses a player it runs the custom Inkwell_RecruitFlock action, which creates an engine flock, recruits up to FlockSize-1 same-role rats within FlockRadius, and locks the player as every member's LockedTarget (so recruits that never saw the player still converge). The engine then handles leader election/succession-on-death, size cap, and dissolve-below-2; Inkwell_FlockAttackToken (groups by flock id) serialises the attack so one rat at a time darts in, bites, and retreats. Combat is keyed on the marked LockedTarget (a Target sensor), NOT a fresh Player sense, so far recruits engage. The pack disperses when the target is lost: a 'Disband' alarm is re-armed every tick the target is within leash, so it only 'Passes' ~5s after the target was last seen, at which point members LeaveFlock and go back to wandering. Generic role (a Variant can't carry Instructions). Inkwell_RecruitFlock + Inkwell_FlockAttackToken are registered by InkwellPlugin.setup().",
   "Type": "Generic",
   "Appearance": "Rat",
   "ApplySeparation": true,
@@ -50,25 +50,55 @@
   },
   "Instructions": [
     {
-      "$Comment": "Combat — a player is within 30. The flock's one token-holder rushes in, bites once, and retreats; everyone else holds at distance.",
-      "Sensor": { "Type": "Player", "Range": 30, "LockOnTarget": true },
+      "$Comment": "AGGRO -> FORM A PACK. A lone (not-yet-flocked) rat that senses a player within 18 forms a flock: the recruit action pulls in nearby same-role rats and locks the player on all of them. Continue so the recruiter proceeds into combat the same tick (it just joined its own flock).",
+      "Continue": true,
+      "Sensor": {
+        "Type": "And",
+        "Sensors": [
+          { "Type": "Player", "Range": 18, "LockOnTarget": true },
+          { "Type": "Self", "Filters": [ { "Type": "Flock", "FlockStatus": "NotMember" } ] }
+        ]
+      },
+      "Actions": [
+        { "Type": "Inkwell_RecruitFlock", "FlockSize": 5, "FlockRadius": 16 }
+      ]
+    },
+    {
+      "$Comment": "IN A PACK. Combat is driven by the shared LockedTarget (set by the recruit action), so members chase/attack even with no line of sight. One token holder bites at a time; the rest ring the target; the pack disbands when the target is lost.",
+      "Sensor": {
+        "Type": "Not",
+        "Sensor": { "Type": "Self", "Filters": [ { "Type": "Flock", "FlockStatus": "NotMember" } ] }
+      },
       "Instructions": [
         {
-          "$Comment": "TOKEN HOLDER: owns the flock's attack turn (the And gates on holding the token AND a player in range, which also locks the target).",
+          "$Comment": "Re-arm the disband timer every tick the target is within leash (35). While engaged the alarm is always ~5s in the future, so it never Passes; once the target is lost it Passes ~5s later. Continue so combat still runs this tick.",
+          "Continue": true,
+          "Sensor": { "Type": "Target", "TargetSlot": "LockedTarget", "Range": 35 },
+          "Actions": [
+            { "Type": "SetAlarm", "Name": "Inkwell_PackDisband", "DurationRange": [ "PT5S", "PT5S" ] }
+          ]
+        },
+        {
+          "$Comment": "Target lost for ~5s (alarm Passed): leave the flock and go back to wandering. Engine dissolves the flock once it drops below 2.",
+          "Sensor": { "Type": "Alarm", "Name": "Inkwell_PackDisband", "State": "Passed" },
+          "Actions": [ { "Type": "LeaveFlock" } ]
+        },
+        {
+          "$Comment": "TOKEN HOLDER: this rat owns the attack turn. Rush the marked target; bite once only when in range; then retreat (per-rat Bit flag), holding through the swing so the hit lands.",
           "Sensor": {
             "Type": "And",
             "Sensors": [
-              { "Type": "Player", "Range": 30, "LockOnTarget": true },
+              { "Type": "Target", "TargetSlot": "LockedTarget", "Range": 35 },
               { "Type": "Inkwell_FlockAttackToken" }
             ]
           },
           "Instructions": [
             {
-              "$Comment": "In bite range and not yet bitten this turn: face + bite ONCE, hold position until the bite actually lands, THEN raise the Bit flag so the retreat branch takes over. The Timeout is essential: the Attack only *starts* the Rat_Bite chain (windup -> selector -> recovery, ~0.4s, damage lands mid-way); without the hold the flag flips immediately and the rat retreats out of range before the swing connects. The Seek (StopDistance 1.5) keeps it in range and facing through the swing. AttackPauseRange [0,0] because the flag (not a cooldown) enforces one bite per turn.",
+              "$Comment": "In bite range and not yet bitten this turn: face + bite ONCE, hold through the swing (Timeout), then raise the Bit flag so the retreat branch takes over.",
               "Sensor": {
                 "Type": "And",
                 "Sensors": [
-                  { "Type": "Player", "Range": 2.4, "LockOnTarget": true },
+                  { "Type": "Target", "TargetSlot": "LockedTarget", "Range": 2.4 },
                   { "Type": "Flag", "Name": "Inkwell_PackRat_Bit", "Set": false }
                 ]
               },
@@ -82,11 +112,11 @@
               ]
             },
             {
-              "$Comment": "Already bit this turn: RETREAT to the ring immediately (hit-and-run). Still the token holder, so no other rat engages until this turn rotates.",
+              "$Comment": "Already bit this turn: retreat to the ring (hit-and-run). Still the token holder, so no one else engages early.",
               "Sensor": {
                 "Type": "And",
                 "Sensors": [
-                  { "Type": "Player", "Range": 30, "LockOnTarget": true },
+                  { "Type": "Target", "TargetSlot": "LockedTarget", "Range": 35 },
                   { "Type": "Flag", "Name": "Inkwell_PackRat_Bit", "Set": true }
                 ]
               },
@@ -94,16 +124,16 @@
               "HeadMotion": { "Type": "Watch" }
             },
             {
-              "$Comment": "Holding the token, not yet in range, not bitten: rush in.",
-              "Sensor": { "Type": "Player", "Range": 30, "LockOnTarget": true },
+              "$Comment": "Holding the token, not yet in range: rush the marked target.",
+              "Sensor": { "Type": "Target", "TargetSlot": "LockedTarget", "Range": 35 },
               "BodyMotion": { "Type": "Seek", "StopDistance": 1.5, "SlowDownDistance": 3, "RelativeSpeed": 0.95 },
               "HeadMotion": { "Type": "Watch" }
             }
           ]
         },
         {
-          "$Comment": "NON-HOLDER: clear the Bit flag (so our next turn bites fresh) and hold/strafe at 5-7 blocks, visibly waiting. Out of bite range, so never swings — the player only ever has one rat to block.",
-          "Sensor": { "Type": "Player", "Range": 30, "LockOnTarget": true },
+          "$Comment": "NON-HOLDER: clear the Bit flag (so our next turn bites fresh) and hold/strafe at 5-7 blocks from the marked target, visibly waiting our turn.",
+          "Sensor": { "Type": "Target", "TargetSlot": "LockedTarget", "Range": 35 },
           "Actions": [ { "Type": "SetFlag", "Name": "Inkwell_PackRat_Bit", "SetTo": false } ],
           "BodyMotion": {
             "Type": "MaintainDistance",
@@ -117,7 +147,7 @@
       ]
     },
     {
-      "$Comment": "No player nearby: wander.",
+      "$Comment": "Not in a pack and nothing to aggro: wander solo.",
       "Sensor": { "Type": "Any" },
       "BodyMotion": { "Type": "WanderInCircle", "Radius": 8, "RelativeSpeed": 0.3 }
     }

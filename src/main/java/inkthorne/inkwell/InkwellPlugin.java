@@ -6,6 +6,7 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.npc.NPCPlugin;
 import inkthorne.inkwell.debug.CombatLogSystem;
 import inkthorne.inkwell.debug.InkwellCommand;
+import inkthorne.inkwell.npc.BuilderActionRecruitFlock;
 import inkthorne.inkwell.npc.BuilderBodyMotionOrbit;
 import inkthorne.inkwell.npc.BuilderSensorFlockAttackToken;
 
@@ -51,6 +52,10 @@ public class InkwellPlugin extends JavaPlugin {
         // Coordination sensor: true for only one member of a flock at a time (the attack-token holder), so a
         // role can gate its attack on it and exactly one creature approaches+swings while the rest hang back.
         NPCPlugin.get().registerCoreComponentType("Inkwell_FlockAttackToken", BuilderSensorFlockAttackToken::new);
+
+        // Runtime flock formation: when an aggro'd NPC runs this action it recruits nearby same-role NPCs into
+        // a flock and rallies them on the target — so packs form dynamically on contact, not at spawn time.
+        NPCPlugin.get().registerCoreComponentType("Inkwell_RecruitFlock", BuilderActionRecruitFlock::new);
 
         // Debug combat log: one server-log line per hit involving an Inkwell creature (attacker -> victim,
         // amount, cause, and the NPC's flock membership). Hytale has no built-in combat log; this fills that
