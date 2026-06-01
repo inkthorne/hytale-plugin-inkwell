@@ -68,6 +68,14 @@ sense — so recruits with no line of sight still engage. Pair with
 Pack size/radius are JSON params (above). The disperse behavior lives in the **role** (a re-armed `Disband`
 alarm → `LeaveFlock`), not here.
 
+### Limitation: the size counter only counts up
+
+The per-pack `AtomicInteger` increments on join but **never decrements** (a member dying/leaving is handled by
+the engine's deferred systems, which this action can't cheaply observe in-tick). Consequence: **a pack won't
+refill after a member dies** — once it hits `FlockSize` it stays "full" to this action until the whole flock
+dissolves (registry entry goes stale → next aggro forms a fresh pack). Refill-on-death would require hooking
+`FlockMembership` removal to decrement the counter.
+
 ## Used by
 
 - [`Inkwell_Role_Pack_Rat`](assets/inkwell-role-pack-rat.md) — rats that rally into a pack on contact.

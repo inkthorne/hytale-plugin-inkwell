@@ -91,6 +91,25 @@ flock id; a single shared id (rotating across members) confirms one coordinated 
 > range still swings, so it can't guarantee a single attacker. Hard-gating the attack decision (this role) is
 > the only way to get "one rat at a time." See [`Inkwell_FlockAttackToken`](../flock-attack-token.md).
 
+## Known limitations / future work
+
+- **A pack does NOT refill after a member dies.** [`Inkwell_RecruitFlock`](../recruit-flock-action.md) caps
+  size with a logical counter that only counts *up* (it can't safely decrement, because the engine's member
+  group lags a tick). So once a pack reaches `FlockSize`, losing members won't let it top back up — it only
+  resets when the whole flock dissolves (then the next aggro forms a fresh one). Refill-on-death would need a
+  death hook that decrements the counter. *(This corrects an earlier assumption that packs reinforce after a
+  death — they don't.)*
+- **`FlockSize` is capped at the engine flock max (~8)** unless the recruit action is given a `FlockAsset`
+  with a larger `maxGrowSize`.
+- **One pack per (role, target), not a global cap.** Different targets — or different roles — each get their
+  own pack, so multiple packs can be active at once (e.g. one per player). A rare *same-tick* aggro race could
+  in principle still split one target's rats into two packs.
+- **Dev tooling ships enabled.** The [combat log + `/inkwell killrole`](../README.md#dev-tooling) are debug
+  aids; gate them behind a flag (or strip them) before a stable release.
+- **Open: component-key naming.** Registered keys (`Inkwell_RecruitFlock`, `Inkwell_Orbit`,
+  `Inkwell_MaintainDistance`, …) are flat; a future pass may switch them to category-led naming
+  (`Inkwell_Action_*`, `Inkwell_BodyMotion_*`, …) — a breaking rename of the already-published keys.
+
 ## Related
 
 - [`Inkwell_RecruitFlock`](../recruit-flock-action.md) — the runtime pack-formation action
